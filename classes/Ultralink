@@ -1145,7 +1145,7 @@ class Ultralink
 //
 
     /* GROUP(Annotation) Returns the URL for this Ultralink's annotation link. */
-    public function annotationLink( ){ global $cMaster->masterPath; return $masterPath . "annotation/" . $this->db->ID . "/" . $this->ID; }
+    public function annotationLink(){ global $masterPath; return $masterPath . "annotation/" . $this->db->ID . "/" . $this->ID; }
 
     /* GROUP(Annotation) language(A language code string.) country(A country code string.) Gets the annotation content for this ultralink for a given language and country bias if any. */
     public function annotation( $language = "", $country = "" ){ return $this->APICallSub('/annotation', array( 'language' => $language ,'country' => $country ), "Could not retrieve annotation for " . $this->description()); }
