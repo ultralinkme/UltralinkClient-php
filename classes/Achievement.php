@@ -2,7 +2,7 @@
 
 // Copyright © 2016 Ultralink Inc.
 
-require_once classesPath() . '/User';
+require_once classesPath() . '/User.php';
 
 class Achievement
 {

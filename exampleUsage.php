@@ -4,7 +4,7 @@
 // Copyright © 2016 Ultralink Inc.
 
 // Including this file will subsequently include all the classes needed for operation and set things up in a default state.
-require_once 'Ultralink-API';
+require_once 'Ultralink-API.php';
 
 $APIKey = "<Enter your API Key here>"; // You can get an API Key from your Profile pane in the Ultralink Dashboard.
 

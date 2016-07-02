@@ -10,8 +10,8 @@ function  configPath(){ return __DIR__ . '/config';  }
 
 require_once  configPath() . '/authLevels.php';
 
-require_once classesPath() . '/Master';
-require_once classesPath() . '/Ultralink';
+require_once classesPath() . '/Master.php';
+require_once classesPath() . '/Ultralink.php';
 
 $shouldExitOnFail = true;
 

@@ -4,13 +4,13 @@
 
 require_once configPath() . '/linkTypes.php';
 
-require_once classesPath() . '/Database';
+require_once classesPath() . '/Database.php';
 
-require_once classesPath() . '/Word';
-require_once classesPath() . '/Category';
-require_once classesPath() . '/Link';
-require_once classesPath() . '/Connection';
-require_once classesPath() . '/PageFeedback';
+require_once classesPath() . '/Word.php';
+require_once classesPath() . '/Category.php';
+require_once classesPath() . '/Link.php';
+require_once classesPath() . '/Connection.php';
+require_once classesPath() . '/PageFeedback.php';
 
 class Ultralink
 {

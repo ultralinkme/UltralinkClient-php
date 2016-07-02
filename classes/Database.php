@@ -2,10 +2,10 @@
 
 // Copyright © 2016 Ultralink Inc.
 
-require_once classesPath() . '/ULBase';
-require_once classesPath() . '/User';
-require_once classesPath() . '/Ultralink';
-require_once classesPath() . '/Job';
+require_once classesPath() . '/ULBase.php';
+require_once classesPath() . '/User.php';
+require_once classesPath() . '/Ultralink.php';
+require_once classesPath() . '/Job.php';
 
 class Database extends ULBase
 {

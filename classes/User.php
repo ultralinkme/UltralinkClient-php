@@ -2,9 +2,9 @@
 
 // Copyright © 2016 Ultralink Inc.
 
-require_once classesPath() . '/ULBase';
-require_once classesPath() . '/Achievement';
-require_once classesPath() . '/Database';
+require_once classesPath() . '/ULBase.php';
+require_once classesPath() . '/Achievement.php';
+require_once classesPath() . '/Database.php';
 
 class User extends ULBase
 {
