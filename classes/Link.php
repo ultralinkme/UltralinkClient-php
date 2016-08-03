@@ -2,6 +2,8 @@
 
 // Copyright © 2016 Ultralink Inc.
 
+namespace UL;
+
 class Link
 {
     public $ul;
@@ -16,14 +18,12 @@ class Link
 
     public $dirty = false;
 
-    /* GROUP(Class Functions) ul(Ultralink) Returns an array of links for the ultralink <b>ul</b>. */
+    /* GROUP(Class Functions) ul(Ultralink) Returns an array of links for the Ultralink <b>ul</b>. */
     public static function getLinks( $ul )
     {
-        global $cMaster;
-
         $theLinks = array();
 
-        if( $call = $cMaster->APICall('0.9.1/db/' . $ul->db->ID . '/ul/' . $ul->ID, 'links' ) )
+        if( $call = Master::$cMaster->APICall('0.9.1/db/' . $ul->db->ID . '/ul/' . $ul->ID, 'links' ) )
         {
             foreach( json_decode( $call, true ) as $link ){ $ul->db->urlIDs[$link['URL']] = $link['ID']; array_push( $theLinks, Link::linkFromObject( $ul, $link ) ); }
         }
@@ -32,11 +32,9 @@ class Link
         return $theLinks;
     }
 
-    /* GROUP(Class Functions) theUL(Ultralink) theURL(A URL string or URL ID.) type(A link type string.) language(A language code string.) country(A country code string.) primaryLink(Boolean. Indiciates whether the link is primary.) metaInfo(An object or JSON string representing the metaInfo.) theURL2(A URL string or URL ID.) Creates a link on the ultralink <b>theUL</b>. */
+    /* GROUP(Class Functions) theUL(Ultralink) theURL(A URL string or URL ID.) type(A link type string.) language(A language code string.) country(A country code string.) primaryLink(Boolean. Indiciates whether the link is primary.) metaInfo(An object or JSON string representing the metaInfo.) theURL2(A URL string or URL ID.) Creates a link on the Ultralink <b>theUL</b>. */
     public static function L( $theUL, $theURL, $type, $language, $country, $primaryLink, $metaInfo, $theURL2 = "" )
     {
-        global $cMaster;
-
         $l = new self();
 
         $l->ul = $theUL;
@@ -65,7 +63,7 @@ class Link
         }
         else
         {
-            if( $call = $cMaster->APICall('0.9.1/db/' . $theUL->db->ID . '/ul/' . $theUL->ID, array('linkSpecific' => $l->url_ID) ) )
+            if( $call = Master::$cMaster->APICall('0.9.1/db/' . $theUL->db->ID . '/ul/' . $theUL->ID, array('linkSpecific' => $l->url_ID) ) )
             {
                 $details = json_decode( $call, true );
 
@@ -165,11 +163,9 @@ class Link
     /* GROUP(Actions) Syncs the status of this link to disk in an efficient way. */
     public function sync()
     {
-        global $cMaster;
-
         if( $this->dirty )
         {
-            if( !$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'setLink' => $this->json() ) ) ){ commandResult( 500, "Could not set link " . $this->description() . " on to " . $this->ul->description() ); }
+            if( !Master::$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'setLink' => $this->json() ) ) ){ commandResult( 500, "Could not set link " . $this->description() . " on to " . $this->ul->description() ); }
 
             $this->dirty = false;
 
@@ -182,9 +178,7 @@ class Link
     /* GROUP(Actions) Deletes this link. */
     public function nuke()
     {
-        global $cMaster;
-
-        if( !$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'removeLink' => $this->json() ) ) ){ commandResult( 500, "Could not remove link " . $this->description() . " from " . $this->ul->ID . " - " . $this->ul->db->name ); }
+        if( !Master::$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'removeLink' => $this->json() ) ) ){ commandResult( 500, "Could not remove link " . $this->description() . " from " . $this->ul->ID . " - " . $this->ul->db->name ); }
     }
 }
 

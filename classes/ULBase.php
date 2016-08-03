@@ -2,6 +2,8 @@
 
 // Copyright © 2016 Ultralink Inc.
 
+namespace UL;
+
 class ULBase
 {
     private $schema;
@@ -29,13 +31,11 @@ class ULBase
 
     protected function populateDetails( $call = "" )
     {
-        global $cMaster;
-
         if( $call != "" )
         {
             if( !isset($this->schema) )
             {
-                if( $call = $cMaster->APICall($call, '' ) )
+                if( $call = Master::$cMaster->APICall($call, '' ) )
                 {
                     $this->iterateOverDetails( json_decode( $call, true ) );
                 }

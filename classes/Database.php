@@ -2,6 +2,8 @@
 
 // Copyright © 2016 Ultralink Inc.
 
+namespace UL;
+
 require_once classesPath() . '/ULBase.php';
 require_once classesPath() . '/User.php';
 require_once classesPath() . '/Ultralink.php';
@@ -9,6 +11,8 @@ require_once classesPath() . '/Job.php';
 
 class Database extends ULBase
 {
+    public static $cDB;
+
     public $ID;
     public $name;
 
@@ -50,9 +54,7 @@ class Database extends ULBase
     /* GROUP(On Disk Databases) Returns the ID and name of every database in the Master. */
     public static function all()
     {
-        global $cMaster;
-
-        if( $call = $cMaster->APICall('0.9.1/db') )
+        if( $call = Master::$cMaster->APICall('0.9.1/db') )
         {
             $result = array();
             foreach( json_decode( $call, true ) as $db ){ array_push( $result, Database::DBWithIDName( $db['ID'], $db['name'] ) ); }
@@ -93,12 +95,10 @@ class Database extends ULBase
     /* GROUP(Database Listings) identifier(<database identifier>) Returns whether <b>identifer</b> is a string that legitimately identifies the Mainline database. */
     protected static function mainlineIdentifier( $identifier )
     {
-        global $cMaster;
-
         if( ($identifier == "") ||
             ($identifier === 0) ||
             ($identifier === '0') ||
-            ($identifier == $cMaster->masterDomain) ||
+            ($identifier == Master::$cMaster->masterDomain) ||
             ($identifier == null) ||
             ($identifier == "undefined") ||
             ($identifier == "Mainline") ||
@@ -151,12 +151,10 @@ class Database extends ULBase
     /* GROUP(Database Listings) identifier(<database identifier>) Loads the database information for <b>indentifier</b>. */
     protected function loadByIdentifer( $identifier = "" )
     {
-        global $cMaster;
-
         if( Database::mainlineIdentifier( $identifier ) )
         {
             $this->ID   = 0;
-//            $this->name = $cMaster->masterDomain;
+//            $this->name = Master::$cMaster->masterDomain;
             $this->name = "Mainline";
         }
         else if( is_numeric($identifier) )
@@ -196,7 +194,7 @@ class Database extends ULBase
     public static function currentDB( $identifier = "" ){ if( $theDB = Database::DB( $identifier ) ){ $theDB->setCurrent(); return $theDB; } return null;  }
 
     /* GROUP(Working Databases) Sets this database to be the current database. */
-    public function setCurrent(){ global $cDB; $cDB = $this; }
+    public function setCurrent(){ Database::$cDB = $this; }
 
     /* GROUP(Information) db_ID(A database ID.) Returns the name of the database with the ID <b>db_ID</b>. */
     public static function nameForDBID( $db_ID ){ return Database::APICallUp( array( 'nameForDBID' => $db_ID ), "Could not lookup database with ID " . $db_ID ); }
@@ -210,16 +208,16 @@ class Database extends ULBase
     /* GROUP(Information) Returns a URL postfix string for use in identifying this database. */
     public function postfix(){ $dbPostfix = ""; if( $this->ID != 0 ){ $dbPostfix = $this->name; } if( $dbPostfix != "" ){ $dbPostfix = "/" . $dbPostfix; } return $dbPostfix; }
 
-    /* GROUP(Information) Returns the number of ultralinks currently in this database. */
-    public function ultralinkCount(){ return $this->APICall( 'ultralinkCount', "Could not retrieve the ultralink count" ); }
+    /* GROUP(Information) Returns the number of Ultralinks currently in this database. */
+    public function ultralinkCount(){ return $this->APICall( 'ultralinkCount', "Could not retrieve the Ultralink count" ); }
 
-    /* GROUP(Information) Returns the remote roots that this Database has associated with it. */
-    public function remoteRoots(){ return $this->APICall( 'remoteRoots', "Failed to get the remote roots for " . $this->description() ); }
+    /* GROUP(Information) Returns the remote Roots that this Database has associated with it. */
+    public function remoteRoots(){ return $this->APICall( 'remoteRoots', "Failed to get the remote Roots for " . $this->description() ); }
 
-    /* GROUP(Vanity Names) name(A vanity name string.) Returns the ultralink ID for a given vanity name or 0 if it does not exist. */
+    /* GROUP(Vanity Names) name(A vanity name string.) Returns the Ultralink ID for a given vanity name or 0 if it does not exist. */
     public function lookupVanityName( $name ){ return $this->APICall( array('lookupVanityName' => $name), "Failed to get the vanity ID for " . $name ); }
 
-    /* GROUP(Vanity Names) ulID(An Ultralink ID.) Returns the vanity string for an ultralink or a null string if it does not exist. */
+    /* GROUP(Vanity Names) ulID(An Ultralink ID.) Returns the vanity string for an Ultralink or a null string if it does not exist. */
     public function lookupVanityDescription( $ulID ){ return $this->APICall( array('lookupVanityDescription' => $ulID), "Failed to get the vanity name for " . $ulID ); }
 
     /* GROUP(Modification) sourceDatabase(Database) Changes the source database. A value of -1 indicates that there is no source database. */
@@ -258,7 +256,7 @@ class Database extends ULBase
     public function ULFilterContent( $unfilteredContent, $contentURL, $contentTitle, $hyperlinks ){ return $this->APICall( array('ULFilterContent' => $unfilteredContent, 'contentURL' => $contentURL, 'contentTitle' => $contentTitle, 'hyperlinks' => $hyperlinks), "Could not filter the content at " . $contentURL ); }
 
     /* GROUP(Authorization) Returns the auth level for this database for the current user. */
-    public function auth(){ global $cUser; return $this->authForUser( $cUser ); }
+    public function auth(){ return $this->authForUser( User::$cUser ); }
     /* GROUP(Authorization) user(User) Returns the auth level for this database for <b>user</b>. */
     public function authForUser( $user ){ return $user->authForDB( $this ); }
 
@@ -271,10 +269,10 @@ class Database extends ULBase
     /* GROUP(Pages) URL(A page URL.) websiteID(A website ID.) title(The title of the page.) Returns information on the page at <b>URL</b> on <b>websiteID</b>. */
     public function pageInfo( $URL, $websiteID, $title ){ return $this->APICall( array('pageInfo' => $URL, 'websiteID' => $websiteID, 'title' => $title), "Couldn't get " . $URL . " information" ); }
 
-    /* GROUP(Categories) category(A category string.) Gets a list of all the subcategories under the given category string as well as the number of subcategories and ultralinks. Ordered by the count of ultralinks in the category descending. */
+    /* GROUP(Categories) category(A category string.) Gets a list of all the subcategories under the given category string as well as the number of subcategories and ultralinks. Ordered by the count of Ultralinks in the category descending. */
     public function categoryTree( $category ){ return $this->APICall( array('categoryTree' => $category), "Couldn't get the category tree for " . $category ); }
 
-    /* GROUP(Categories) existingCategory(A category string.) newCategory(A category string.) Modifies all applicable ultralinks to change an existing category to a given new category. */
+    /* GROUP(Categories) existingCategory(A category string.) newCategory(A category string.) Modifies all applicable Ultralinks to change an existing category to a given new category. */
     public function changeCategory( $existingCategory, $newCategory ){ return $this->APICall( array('changeCategory' => $existingCategory, 'newCategory' => $newCategory), "Couldn't change existing category " . $existingCategory . " to " . $newCategory ); }
 
     /* GROUP(URLs) url_ID(A URL ID.) Returns the URL for the link associated with the ID <b>url_ID</b>. */
@@ -292,26 +290,26 @@ class Database extends ULBase
         }
     }
 
-    /* GROUP(Queries) URL(A URL string.) trimset(A character to trim on.) Returns the first ultralink that has <b>URL</b> attached to it. */
-    public function ulFromURL( $URL, $trimset = "" ){ return Ultralink::U( $this->APICall( array( 'ulFromURL' => $URL, 'trimset' => $trimset ), "Could not lookup the ultralink for URL " . $URL ) ); }
+    /* GROUP(Queries) URL(A URL string.) trimset(A character to trim on.) Returns the first Ultralink that has <b>URL</b> attached to it. */
+    public function ulFromURL( $URL, $trimset = "" ){ $ulID = $this->APICall( array( 'ulFromURL' => $URL, 'trimset' => $trimset ), "Could not lookup the Ultralink for URL " . $URL ); if( $ulID != 0 ){ return Ultralink::U( $ulID ); } return null; }
 
-    /* GROUP(Queries) word(A word string.) case(Indicates whether the search should be case sensitive.) category(A category string.) recent(Boolean. If true, then restrict search to recent ultralinks.) Returns the first ultralink that has <b>word</b> attached to it. You can optionally use <b>case</b>, <b>category</b> and <b>recent</b> to further narrow down your results. */
-    public function ulFromWord( $word, $caseSensitive = false, $category = "", $recent = false ){ return Ultralink::U( $this->APICall( array( 'ulFromWord' => $word, 'case' => $caseSensitive, 'category' => $category, 'recent' => $recent ), "Could not lookup the ultralink for word " . $word ) ); }
+    /* GROUP(Queries) word(A word string.) case(Indicates whether the search should be case sensitive.) category(A category string.) recent(Boolean. If true, then restrict search to recent ultralinks.) Returns the first Ultralink that has <b>word</b> attached to it. You can optionally use <b>case</b>, <b>category</b> and <b>recent</b> to further narrow down your results. */
+    public function ulFromWord( $word, $caseSensitive = false, $category = "", $recent = false ){ $ulID = $this->APICall( array( 'ulFromWord' => $word, 'case' => $caseSensitive, 'category' => $category, 'recent' => $recent ), "Could not lookup the Ultralink for word " . $word ); if( $ulID != 0 ){ return Ultralink::U( $ulID ); } return null; }
 
-    /* GROUP(Queries) connection(A Connection type string.) offset(Pagination offset.) limit(Pagination limit.) Returns a set of ultralinks that have a connection string that begins with $connection ordered by primary instance count descending. */
-    public function connectionUltralinks( $connection, $offset = 0, $limit = 100 ){ return $this->APICall( array( 'connectionUltralinks' => $connection, 'offset' => $offset, 'limit' => $limit ), "Could not lookup ultralinks for connection " . $connection ); }
+    /* GROUP(Queries) connection(A Connection type string.) offset(Pagination offset.) limit(Pagination limit.) Returns a set of Ultralinks that have a connection string that begins with $connection ordered by primary instance count descending. */
+    public function connectionUltralinks( $connection, $offset = 0, $limit = 100 ){ return $this->APICall( array( 'connectionUltralinks' => $connection, 'offset' => $offset, 'limit' => $limit ), "Could not lookup Ultralinks for connection " . $connection ); }
 
-    /* GROUP(Queries) category(A category string.) offset(Pagination offset.) limit(Pagination limit.) Returns a set of ultralinks that have a category string that begins with $category ordered by primary instance count descending. */
-    public function categoryUltralinks( $category, $offset = 0, $limit = 100 ){ return $this->APICall( array( 'categoryUltralinks' => $category, 'offset' => $offset, 'limit' => $limit ), "Could not lookup ultralinks for category " . $category ); }
+    /* GROUP(Queries) category(A category string.) offset(Pagination offset.) limit(Pagination limit.) Returns a set of Ultralinks that have a category string that begins with $category ordered by primary instance count descending. */
+    public function categoryUltralinks( $category, $offset = 0, $limit = 100 ){ return $this->APICall( array( 'categoryUltralinks' => $category, 'offset' => $offset, 'limit' => $limit ), "Could not lookup Ultralinks for category " . $category ); }
 
-    /* GROUP(Queries) query(A search string.) wordSearch(Search for <b>query</b> in words.) categorySearch(Search for <b>query</b> in categories.) exact(Boolean. If true the match cannot be a substring.) sortType(What way to sort the results.) includePages(Boolean. If true, include the pages that the Ultralink is on.) offset(Pagination offset.) limit(Pagination limit.) Returns a set of ultralinks based on a query string and various search attributes. Searches can examine ultralink words and category strings or both. Matches can be required to be exact or not. Sorting can be by instance count, exact matching, alphabetical word order, word length or alphabetical category order. Results can optinally include information on what pages the ultralinks resides as well. Results are paged at 100 results by default. */
-    public function search( $query, $wordSearch = true, $categorySearch = true, $exact = false, $sortType = 'instanceCount', $includePages = false, $offset = 0, $limit = 100 ){ return $this->APICallSub( '/ul', array( 'search' => $query, 'wordSearch' => $wordSearch, 'categorySearch' => $categorySearch, 'sortType' => $sortType, 'exact' => $exact, 'includePages' => $includePages, 'offset' => $offset, 'limit' => $limit ), "Could not perform ultralink search" ); }
+    /* GROUP(Queries) query(A search string.) wordSearch(Search for <b>query</b> in words.) categorySearch(Search for <b>query</b> in categories.) exact(Boolean. If true the match cannot be a substring.) sortType(What way to sort the results.) includePages(Boolean. If true, include the pages that the Ultralink is on.) offset(Pagination offset.) limit(Pagination limit.) Returns a set of Ultralinks based on a query string and various search attributes. Searches can examine Ultralink words and category strings or both. Matches can be required to be exact or not. Sorting can be by instance count, exact matching, alphabetical word order, word length or alphabetical category order. Results can optinally include information on what pages the Ultralinks resides as well. Results are paged at 100 results by default. */
+    public function search( $query, $wordSearch = true, $categorySearch = true, $exact = false, $sortType = 'instanceCount', $includePages = false, $offset = 0, $limit = 100 ){ return $this->APICallSub( '/ul', array( 'search' => $query, 'wordSearch' => $wordSearch, 'categorySearch' => $categorySearch, 'sortType' => $sortType, 'exact' => $exact, 'includePages' => $includePages, 'offset' => $offset, 'limit' => $limit ), "Could not perform Ultralink search" ); }
 
     /* GROUP(Queries) likeString(A LIKE string to match the URL against.) type(The like type to match against.) language(A langauge bias if any.) country(A country bias if any.) primaryLink(Indication if the link should be the primary one or not.) Returns the Ultralink IDs that have links that fit the given criteria. */
     public function linkQuery( $likeString = "", $type = "", $language = "", $country = "", $primaryLink = "" ){ return $this->APICallSub( '/ul', array( 'linkQuery' => $likeString, 'type' => $type, 'language' => $language, 'country' => $country, 'primaryLink' => $primaryLink ), "Could not run the link query" ); }
 
     /* GROUP(Queries) word(A word string.) Returns the most recently modified ultrailnk within the last day that has the given word attached to it. */
-    public function recentUltralink( $word ){ if( $ul = $this->ulFromWord( $word, false, "", true ) ){ return $ul; } else{ commandResult( 404, "Could not find recent ultralink for " . $word ); } }
+    public function recentUltralink( $word ){ if( $ul = $this->ulFromWord( $word, false, "", true ) ){ return $ul; } else{ commandResult( 404, "Could not find recent Ultralink for " . $word ); } }
 
     /* PRIVATE GROUP(Queries) Returns the examination status for a given image or 'false' if it does not exist. */
     public function imageExaminationStatus( $image ){ return $this->APICall( array( 'imageExaminationStatus' => $image ), "Could not look up image status for " . $image ); }
@@ -343,10 +341,10 @@ class Database extends ULBase
     /* GROUP(Analytics) associationType(The type of the above identifier if given.) association(An association identifier.) Returns a list of activity sessions for a given association type and identifier. Sessions are defined as activity clusters at least 60 minutes apart from each other. */
     public function associationSessions( $associationType, $association ){ return $this->APICall( array('associationSessions' => $association, 'associationType' => $associationType), "Could not get the association sessions" ); }
 
-    /* GROUP(Analytics) pagePath(A URL fragment that defines the scope of desired data.) contentsType(Indicates what kind of content data is desired. Values can be <b>catpresent</b>, <b>catclicked</b>, <b>ulpresent</b> or <b>ulclicked</b>.) timeRestrict(Determines if the results should be restricted in any way. Values can be <b>cache</b> or <b>alltime</b>.) restrictToThis(A boolean indicating that results should only match the exact URL of <b>pagePath</b>.) timeScale(The time scale of the data we are looking at. Values can be <b>monthly</b>, <b>daily</b> or <b>hourly</b>.) timeDuration(The numeric length of the time slice that the data should examine in units defined by <b>timeScale</b>.) offset(Pagination offset.) limit(Pagination limit. Max <b>100</b>.) Gets ultralink content and interaction information within a given time range at a given URL path fragment which can also be the value "all". You can specify what kind of ultralink content you want and select prescence of ultralinks, categories or click data on both those as well. Can restrict some configurations to only look at data connected to what is in the current content cache through resultRestrict. Can also restrict the results to an exact URL path fragment match instead of including everything under it as well. Can be paged through an offset and limit. */
+    /* GROUP(Analytics) pagePath(A URL fragment that defines the scope of desired data.) contentsType(Indicates what kind of content data is desired. Values can be <b>catpresent</b>, <b>catclicked</b>, <b>ulpresent</b> or <b>ulclicked</b>.) timeRestrict(Determines if the results should be restricted in any way. Values can be <b>cache</b> or <b>alltime</b>.) restrictToThis(A boolean indicating that results should only match the exact URL of <b>pagePath</b>.) timeScale(The time scale of the data we are looking at. Values can be <b>monthly</b>, <b>daily</b> or <b>hourly</b>.) timeDuration(The numeric length of the time slice that the data should examine in units defined by <b>timeScale</b>.) offset(Pagination offset.) limit(Pagination limit. Max <b>100</b>.) Gets Ultralink content and interaction information within a given time range at a given URL path fragment which can also be the value "all". You can specify what kind of Ultralink content you want and select prescence of ultralinks, categories or click data on both those as well. Can restrict some configurations to only look at data connected to what is in the current content cache through resultRestrict. Can also restrict the results to an exact URL path fragment match instead of including everything under it as well. Can be paged through an offset and limit. */
     public function myContents( $pagePath, $contentsType, $timeRestrict, $restrictToThis, $timeScale, $timeDuration, $offset = 0, $limit = 10 ){ return $this->APICall( array('myContents' => $pagePath, 'contentsType' => $contentsType, 'resultRestrict' => $timeRestrict, 'restrictToThis' => $restrictToThis, 'timeScale' => $timeScale, 'timeDuration' => $timeDuration, 'offset' => $offset, 'limit' => $limit), "Could not get contents analytics" ); }
 
-    /* GROUP(Analytics) pagePath(A URL fragment that defines the scope of desired data.) orderBy(How to structure and order the results. Values can be <b>usage</b>, <b>hosted</b>, <b>pages</b> or <b>clicks</b>.) timeRestrict(Determines if the results should be restricted in any way. Values can be <b>cache</b> or <b>alltime</b>.) timeScale(The time scale of the data we are looking at. Values can be <b>monthly</b>, <b>daily</b> or <b>hourly</b>.) timeDuration(The numeric length of the time slice that the data should examine in units defined by <b>timeScale</b>.) search(A search string to restrict the entires under <b>pagePath</b> can match against.) offset(Pagination offset.) limit(Pagination limit. Max <b>100</b>.) Gets a statistical look within a time period at a given URL Path fragment which can also be "". Results can be ordered and organized by usage frequency, whether or not the ultralinks are hosted natively, number of pages or numbers of clicks. Can restrict some configurations to only look at data connected to what is in the current content cache. Can also restrict results to be limited to a search as we well. Can be paged by a given offset and limit. */
+    /* GROUP(Analytics) pagePath(A URL fragment that defines the scope of desired data.) orderBy(How to structure and order the results. Values can be <b>usage</b>, <b>hosted</b>, <b>pages</b> or <b>clicks</b>.) timeRestrict(Determines if the results should be restricted in any way. Values can be <b>cache</b> or <b>alltime</b>.) timeScale(The time scale of the data we are looking at. Values can be <b>monthly</b>, <b>daily</b> or <b>hourly</b>.) timeDuration(The numeric length of the time slice that the data should examine in units defined by <b>timeScale</b>.) search(A search string to restrict the entires under <b>pagePath</b> can match against.) offset(Pagination offset.) limit(Pagination limit. Max <b>100</b>.) Gets a statistical look within a time period at a given URL Path fragment which can also be "". Results can be ordered and organized by usage frequency, whether or not the Ultralinks are hosted natively, number of pages or numbers of clicks. Can restrict some configurations to only look at data connected to what is in the current content cache. Can also restrict results to be limited to a search as we well. Can be paged by a given offset and limit. */
     public function myWebsites( $pagePath, $orderBy, $timeRestrict, $timeScale, $timeDuration, $search = "", $offset = 0, $limit = 10 ){ return $this->APICall( array('myWebsites' => $pagePath, 'orderBy' => $orderBy, 'resultRestrict' => $timeRestrict, 'timeScale' => $timeScale, 'timeDuration' => $timeDuration, 'search' => $search, 'offset' => $offset, 'limit' => $limit), "Could not get website analytics" ); }
 
     /* GROUP(Holding Tank) Returns the entries currently in the holding tank. */
@@ -355,17 +353,17 @@ class Database extends ULBase
     /* GROUP(Holding Tank) Returns the number of items currently in the holding tank. */
     public function holdingTankCount(){ return $this->APICall( 'holdingTankCount', "Could not lookup web holding tank count" ); }
 
-    /* GROUP(Holding Tank) category(A category string.) URL(The URL for an initial link to be attached.) type(The link type of above URL.) word(A an initial word to be attached.) caseSensitive(Case-sensitivty of the above word. 1 for case-sensitive, 0 otherwise.) Submits information about a proposed ultralink into the holding tank for review. */
+    /* GROUP(Holding Tank) category(A category string.) URL(The URL for an initial link to be attached.) type(The link type of above URL.) word(A an initial word to be attached.) caseSensitive(Case-sensitivty of the above word. 1 for case-sensitive, 0 otherwise.) Submits information about a proposed Ultralink into the holding tank for review. */
     public function submitUltralink( $category, $URL, $type, $word, $caseSensitive = false ){ return $this->APICall( array('submitUltralink' => $category, 'URL' => $URL, 'urlType' => $type, 'word' => $word, 'caseSensitive' => $caseSensitive ), "Could not submit the ultralink" ); }
 
-    /* GROUP(Holding Tank) resolution(The descision string whether to <b>accept</b> or <b>reject</b> the submitted Ultralink.) category(A category string.) URL(The URL for an initial link to be attached.) urlType(The link type of above URL.) word(A an initial word to be attached.) contributor(<user identifier>) caseSensitive(Case-sensitivty of the above word. 1 for case-sensitive, 0 otherwise.) Removes the submission entry for the new ultralink. If the resolution is 'accept' then it creates the suggested ultralink. */
+    /* GROUP(Holding Tank) resolution(The descision string whether to <b>accept</b> or <b>reject</b> the submitted Ultralink.) category(A category string.) URL(The URL for an initial link to be attached.) urlType(The link type of above URL.) word(A an initial word to be attached.) contributor(<user identifier>) caseSensitive(Case-sensitivty of the above word. 1 for case-sensitive, 0 otherwise.) Removes the submission entry for the new Ultralink. If the resolution is 'accept' then it creates the suggested Ultralink. */
     public function resolveNewUltralink( $resolution, $category, $URL, $urlType, $word, $contributor, $caseSensitive = false ){ return Ultralink::U( $this->APICall( array('resolveNewUltralink' => $resolution, 'contributor' => $contributor, 'category' => $category, 'URL' => $URL, 'urlType' => $urlType, 'word' => $word, 'caseSensitive' => $caseSensitive ), "Could not resolve the submitted ultralink" ), $this ); }
 
     public function APICallSub( $sub, $fields, $error )
     {
-        global $cMaster;
+        $call = Master::$cMaster->APICall('0.9.1/db/' . $this->ID . $sub, $fields );
 
-        if( $call = $cMaster->APICall('0.9.1/db/' . $this->ID . $sub, $fields ) )
+        if( $call !== "" )
         {
             if( $call === true ){ return $call; }
                             else{ return json_decode( $call, true ); }
@@ -376,9 +374,9 @@ class Database extends ULBase
 
     public static function APICallUp( $fields, $error )
     {
-        global $cMaster;
+        $call = Master::$cMaster->APICall('0.9.1/db', $fields );
 
-        if( $call = $cMaster->APICall('0.9.1/db', $fields ) )
+        if( $call !== "" )
         {
             if( $call === true ){ return $call; }
                             else{ return json_decode( $call, true ); }
@@ -387,6 +385,6 @@ class Database extends ULBase
     }
 }
 
-$cDB = Database::DB();
+Database::$cDB = Database::DB();
 
 ?>

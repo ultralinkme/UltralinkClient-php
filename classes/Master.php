@@ -2,16 +2,27 @@
 
 // Copyright © 2016 Ultralink Inc.
 
-$printCallstring = false;
-$printBacktrace  = false;
+namespace UL;
 
 class Master
 {
+    public static $cMaster;
+
+    public static $printCallstring = false;
+    public static $printBacktrace  = false;
+    public static $printRawResult  = false;
+    public static $printErrors     = false;
+
+    public static $shouldExitOnFail = false;
+
+    public static $errorCallback = "";
+
     public $masterPath;
     public $masterDomain;
 
     public $numberOfCalls = 0;
 
+    /* GROUP(Interfacing) mp(A URL to an Ultralink Master) Creates an Ultralink Master instance located at <b>mp</b>. */
     public static function M( $mp = "https://ultralink.me/" )
     {
         $m = new self();
@@ -27,10 +38,18 @@ class Master
         return $m;
     }
 
+    /* GROUP(Interfacing) at(An Ultralink API Key) mp(A URL to an Ultralink Master) Creates an Ultralink Master instance located at <b>mp</b> and authenticates it against the given API Key <b>at</b>. */
+    public static function authenticate( $at, $mp = "https://ultralink.me/" )
+    {
+        $m = Master::M( $mp );
+        $m->login($at);
+
+        return $m;
+    }
+
+    /* GROUP(Interfacing) at(An Ultralink API Key) Authenticates this Master object with the given API Key. Returns the corresponding User object. */
     public function login( $at )
     {
-        global $cUser;
-
         if( $call = $this->APICall('0.9.1/user/me', '', $at ) )
         {
             $details = json_decode( $call, true );
@@ -43,20 +62,21 @@ class Master
             
             $u->iterateOverDetails( $details );
 
-            if( $cUser->ID == 0 ){ $u->setCurrent(); }
+            if( User::$cUser->ID == 0 ){ $u->setCurrent(); }
         }
         else{ commandResult( 500, "Could not lookup user with token " . $at ); }
 
-        return $cUser;
+        return User::$cUser;
     }
+
+    /* GROUP(Interfacing) identifier(<database identifier>) Sets the current database to the one identified by <b>identifier</b>. */
+    public static function currentMaster( $mp = "https://ultralink.me/" ){ if( $theM = Master::M( $mp ) ){ $theM->setCurrent(); return $theM; } return null;  }
+
+    /* GROUP(Interfacing) Sets this master to be the current master. */
+    public function setCurrent(){ Master::$cMaster = $this; }
 
     public function APICall( $command, $fields = "", $at = "" )
     {
-        global $cUser;
-
-        global $printCallstring;
-        global $printBacktrace;
-
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->masterPath . "API/" . $command );
         curl_setopt($ch, CURLOPT_USERAGENT, 'Ultralink API Client PHP/0.9.1');
@@ -66,8 +86,8 @@ class Master
 
         $token_string = "";
 
-        if( !empty($cUser->access_token) ){ $token_string .= 'access_token=' . $cUser->access_token; }
-                    else if( !empty($at) ){ $token_string .= 'access_token=' . $at;                  }
+        if( !empty(User::$cUser->access_token) ){ $token_string .= 'access_token=' . User::$cUser->access_token; }
+                          else if( !empty($at) ){ $token_string .= 'access_token=' . $at;                        }
 
         $fields_string = $token_string;
 
@@ -138,36 +158,31 @@ class Master
 
 //        echo print_r( debug_backtrace(), true );
 
-        if( $printCallstring )
-        {
-//            echo $command . " - " . str_replace( $token_string, "", $fields_string ) . "\n";
-            echo $command . " - " . $callLineString . "\n";
-        }
-
-        if( $printBacktrace )
-        {
-            foreach( debug_backtrace() as $frame ){ echo $frame['file'] . ":" . $frame['line'] . " " . $frame['class'] . "." . $frame['function'] . "\n"; }
-        }
-
+        if( Master::$printCallstring ){ echo $this->masterPath . "API/" . $command . " - " . $callLineString . "\n"; }
+        if( Master::$printBacktrace  ){ foreach( debug_backtrace() as $frame ){ echo $frame['file'] . ":" . $frame['line'] . " " . $frame['class'] . "." . $frame['function'] . "\n"; } }
+        if( Master::$printRawResult  ){ echo $call['result'] . "\n"; }
 
         $this->numberOfCalls++;
 
         if( $call['info']['http_code'] == 200 )
         {
-            if( !empty($call['result']) ){ return $call['result']; }
+            if( $call['result'] !== "" ){ return $call['result']; }
 
             return true;
         }
         else
         {
-            echo $this->masterPath . " returned " . $call['info']['http_code'] . " - " . $call['result'] . "\n";
+            $errorString = $this->masterPath . " returned " . $call['info']['http_code'] . " - " . $call['result'];
+
+            if( !empty(Master::$errorCallback) ){ call_user_func( Master::$errorCallback, $errorString ); }
+            if( Master::$printErrors ){ echo $errorString . "\n"; }
         }
     }
 
     /* GROUP(Misc.) Returns all the unique user assocation types. */
     public function associationTypes(){ if( $call = $this->APICall('0.9.1/', 'associationTypes' ) ){ $types = array(); foreach( json_decode( $call, true ) as $type ){ array_push( $types, $type ); } return $types; }else{ commandResult( 500, "Could not retrieve the association types" ); } }
 
-    /* GROUP(Misc.) ultralinks(A JSON array of ultralink ID numbers.) Returns descriptions for the specified ultralinks. */
+    /* GROUP(Misc.) ultralinks(A JSON array of Ultralink ID numbers.) Returns descriptions for the specified ultralinks. */
     public function specifiedDescriptions( $ultralinks )
     {
         $result = array();
@@ -239,6 +254,6 @@ class Master
     public function inviteUser( $name, $email ){ if( $call = $this->APICall('0.9.1/', array('inviteUser' => $email, 'name' => $name) ) ){ return json_decode( $call, true ); }else{ commandResult( 500, "Could not invite " . $name . "/" . $email ); } }
 }
 
-$cMaster = Master::M();
+Master::$cMaster = Master::M();
 
 ?>

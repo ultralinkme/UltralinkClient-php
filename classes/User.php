@@ -2,12 +2,15 @@
 
 // Copyright © 2016 Ultralink Inc.
 
+namespace UL;
+
 require_once classesPath() . '/ULBase.php';
 require_once classesPath() . '/Achievement.php';
 require_once classesPath() . '/Database.php';
 
 class User extends ULBase
 {
+    public static $cUser;
     public $access_token;
 
     public $ID;
@@ -60,9 +63,7 @@ class User extends ULBase
     /* GROUP(Class Functions) Returns a list of all the users in the system. */
     public static function allUsers()
     {
-        global $cMaster;
-
-        if( $call = $cMaster->APICall('0.9.1/user') )
+        if( $call = Master::$cMaster->APICall('0.9.1/user') )
         {
             return json_decode( $call, true );
         }
@@ -72,9 +73,7 @@ class User extends ULBase
     /* GROUP(Class Functions) text(A search string.) minAuth(An integer for the minimum auth level.) Returns a list of users based on a search string and minimum authorization level. */
     public static function accountSuggestion( $text, $minAuth )
     {
-        global $cMaster;
-
-        if( $call = $cMaster->APICall('0.9.1/user', array('accountSuggestion' => $text, 'minAuth' => $minAuth)) )
+        if( $call = Master::$cMaster->APICall('0.9.1/user', array('accountSuggestion' => $text, 'minAuth' => $minAuth)) )
         {
             return json_decode( $call, true );
         }
@@ -124,8 +123,6 @@ class User extends ULBase
 
     protected function loadByIdentifer( $identifier = "" )
     {
-        global $cMaster;
-
         if( ($identifier == "") || ($identifier === 0) || ($identifier === '0') || ($identifier == null) || ($identifier == "undefined") || (empty($identifier)) )
         {
             $this->ID    = 0;
@@ -135,7 +132,7 @@ class User extends ULBase
         {
             $this->ID = intval($identifier);
 
-            if( $call = $cMaster->APICall('0.9.1/user/' . $this->ID, 'email', $this->access_token ) )
+            if( $call = Master::$cMaster->APICall('0.9.1/user/' . $this->ID, 'email', $this->access_token ) )
             {
                 $this->email = json_decode( $call, true );
             }
@@ -145,7 +142,7 @@ class User extends ULBase
         {
             $this->email = $identifier;
 
-            if( $call = $cMaster->APICall('0.9.1/user/' . $this->email, 'ID', $this->access_token ) )
+            if( $call = Master::$cMaster->APICall('0.9.1/user/' . $this->email, 'ID', $this->access_token ) )
             {
                 $this->ID = intval(json_decode( $call, true ));
             }
@@ -169,7 +166,7 @@ class User extends ULBase
     public function description(){ return $this->email . " [" . $this->ID . "]"; }
 
     /* GROUP(Information) Returns the URL to this user gravatar. */
-    public function gravatar(){ global $cMaster; return "https://secure.gravatar.com/avatar/" . md5( strtolower( trim( $this->email ) ) ) . "?d=" . urlencode( $cMaster->masterPath . "images/anonymous.png" ); }
+    public function gravatar(){ return "https://secure.gravatar.com/avatar/" . md5( strtolower( trim( $this->email ) ) ) . "?d=" . urlencode( Master::$cMaster->masterPath . "images/anonymous.png" ); }
 
     /* GROUP(Information) Returns the URL to this user's image. */
     public function image(){ return $this->APICall('image', "Could not retrieve the user image"); }
@@ -263,7 +260,7 @@ class User extends ULBase
     }
 
     /* GROUP(Actions) Set this user to be the current user. */
-    public function setCurrent(){ global $cUser; $cUser = $this; }
+    public function setCurrent(){ User::$cUser = $this; }
 
     /* GROUP(Actions) Returns an array containing information on all the databases this user has permissions to. */
     public function getDatabases(){ return $this->APICall('databases', "Could not get databases for " . $this->description()); }
@@ -289,9 +286,9 @@ class User extends ULBase
     public function APICall( $fields, $error ){ return $this->APICallSub( '', $fields, $error ); }
     public function APICallSub( $sub, $fields, $error )
     {
-        global $cMaster;
-
-        if( $call = $cMaster->APICall('0.9.1/user/' . $this->ID . $sub, $fields ) )
+        $call = Master::$cMaster->APICall('0.9.1/user/' . $this->ID . $sub, $fields );
+        
+        if( $call !== "" )
         {
             if( $call === true ){ return $call; }
                             else{ return json_decode( $call, true ); }
@@ -300,6 +297,6 @@ class User extends ULBase
     }
 }
 
-$cUser = User::U();
+User::$cUser = User::U();
 
 ?>

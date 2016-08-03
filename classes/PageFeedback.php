@@ -2,6 +2,8 @@
 
 // Copyright © 2016 Ultralink Inc.
 
+namespace UL;
+
 class PageFeedback
 {
     public $ul;
@@ -12,14 +14,12 @@ class PageFeedback
 
     public $dirty = false;
 
-    /* GROUP(Class Functions) ul(Ultralink) Returns an array of links for the ultralink <b>ul</b>. */
+    /* GROUP(Class Functions) ul(Ultralink) Returns an array of links for the Ultralink <b>ul</b>. */
     public static function getPageFeedback( $ul )
     {
-        global $cMaster;
-
         $thePageFeedback = array();
 
-        if( $call = $cMaster->APICall('0.9.1/db/' . $ul->db->ID . '/ul/' . $ul->ID, 'pageFeedbacks' ) )
+        if( $call = Master::$cMaster->APICall('0.9.1/db/' . $ul->db->ID . '/ul/' . $ul->ID, 'pageFeedbacks' ) )
         {
             foreach( json_decode( $call, true ) as $pf ){ array_push( $thePageFeedback, PageFeedback::pageFeedbackFromObject( $ul, $pf ) ); }
         }
@@ -28,11 +28,9 @@ class PageFeedback
         return $thePageFeedback;
     }
 
-    /* GROUP(Class Functions) theUL(Ultralink) thePageID(A page ID.) theWord(A string of the word that the feedback is on.) theFeedback(A feedback number.) Creates a page feedback for ultralink <b>theUL</b>. */
+    /* GROUP(Class Functions) theUL(Ultralink) thePageID(A page ID.) theWord(A string of the word that the feedback is on.) theFeedback(A feedback number.) Creates a page feedback for Ultralink <b>theUL</b>. */
     public static function PF( $theUL, $thePageID, $theWord, $theFeedback = null )
     {
-        global $cMaster;
-
         $pf = new self();
 
         $pf->ul      = $theUL;
@@ -45,7 +43,7 @@ class PageFeedback
         }
         else
         {
-            if( $call = $cMaster->APICall('0.9.1/db/' . $theUL->db->ID . '/ul/' . $theUL->ID, array('pageFeedbackSpecific' => $pf->page_ID, 'word' => $pf->word ) ) )
+            if( $call = Master::$cMaster->APICall('0.9.1/db/' . $theUL->db->ID . '/ul/' . $theUL->ID, array('pageFeedbackSpecific' => $pf->page_ID, 'word' => $pf->word ) ) )
             {
                 $details = json_decode( $call, true );
 
@@ -99,11 +97,9 @@ class PageFeedback
     /* GROUP(Actions) Syncs the status of this page feedback to disk in an efficient way. */
     public function sync()
     {
-        global $cMaster;
-
         if( $this->dirty )
         {
-            if( !$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'setPageFeedback' => $this->json() ) ) ){ commandResult( 500, "Could not set page feedback " . $this->description() . " on to " . $this->ul->description() ); }
+            if( !Master::$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'setPageFeedback' => $this->json() ) ) ){ commandResult( 500, "Could not set page feedback " . $this->description() . " on to " . $this->ul->description() ); }
             $this->dirty = false;
 
             return true;
@@ -115,9 +111,7 @@ class PageFeedback
     /* GROUP(Actions) Deletes this page feedback. */
     public function nuke()
     {
-        global $cMaster;
-
-        if( !$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'removePageFeedback' => $this->json() ) ) ){ commandResult( 500, "Could not remove page feedback " . $this->description() . " from " . $this->ul->ID . " - " . $this->ul->db->name ); }
+        if( !Master::$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'removePageFeedback' => $this->json() ) ) ){ commandResult( 500, "Could not remove page feedback " . $this->description() . " from " . $this->ul->ID . " - " . $this->ul->db->name ); }
     }
 }
 

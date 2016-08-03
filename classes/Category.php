@@ -2,6 +2,8 @@
 
 // Copyright © 2016 Ultralink Inc.
 
+namespace UL;
+
 class Category
 {
     public $ul;
@@ -13,14 +15,12 @@ class Category
 
     public static $defaultCategory = "(NEEDS CATEGORIZATION)";
 
-    /* GROUP(Class Functions) ul(Ultralink) Returns an array of categories for the ultralink <b>ul</b>. */
+    /* GROUP(Class Functions) ul(Ultralink) Returns an array of categories for the Ultralink <b>ul</b>. */
     public static function getCategories( $ul )
     {
-        global $cMaster;
-
         $theCategories = array();
 
-        if( $call = $cMaster->APICall('0.9.1/db/' . $ul->db->ID . '/ul/' . $ul->ID, 'categories' ) )
+        if( $call = Master::$cMaster->APICall('0.9.1/db/' . $ul->db->ID . '/ul/' . $ul->ID, 'categories' ) )
         {
             foreach( json_decode( $call, true ) as $category ){ array_push( $theCategories, Category::categoryFromObject( $ul, $category ) ); }
         }
@@ -29,11 +29,9 @@ class Category
         return $theCategories;
     }
 
-    /* GROUP(Class Functions) theUL(Ultralink) theString(A category string.) thePrimaryCategory(Boolean. Indicates whether this category is primary.) Creates a category <b>theString</b> on the ultralink <b>theUL</b>. */
+    /* GROUP(Class Functions) theUL(Ultralink) theString(A category string.) thePrimaryCategory(Boolean. Indicates whether this category is primary.) Creates a category <b>theString</b> on the Ultralink <b>theUL</b>. */
     public static function C( $theUL, $theString, $thePrimaryCategory = null )
     {
-        global $cMaster;
-
         $c = new self();
 
         $c->ul             = $theUL;
@@ -45,7 +43,7 @@ class Category
         }
         else
         {
-            if( $call = $cMaster->APICall('0.9.1/db/' . $theUL->db->ID . '/ul/' . $theUL->ID, array('categorySpecific' => $theString) ) )
+            if( $call = Master::$cMaster->APICall('0.9.1/db/' . $theUL->db->ID . '/ul/' . $theUL->ID, array('categorySpecific' => $theString) ) )
             {
                 $details = json_decode( $call, true );
 
@@ -80,22 +78,20 @@ class Category
     /* GROUP(Representations) Returns a serializable object representation of the category. */
     public function objectify(){ return array( 'category' => $this->categoryString(), 'primaryCategory' => $this->primaryCategory() ); }
 
-    /* GROUP(Primary) Returns whether this category is the primary category. */
+    /* GROUP(Primary) Returns whether this category is the Primary Category. */
     public function primaryCategory(){ return $this->primaryCategory; }
 
-    /* GROUP(Primary) v(Boolean. Indicates whether the category is primary.) Sets this category to be the primary category. */
+    /* GROUP(Primary) v(Boolean. Indicates whether the category is primary.) Sets this category to be the Primary Category. */
     public function setPrimaryCategory( $v ){ if( $this->primaryCategory != $v ){ if( $this->dirty ){ $this->dirty = false; }else{ $this->dirty = true; } } $this->primaryCategory = $v; }
 
-    /* GROUP(Primary) Returns the primary category for the ultralink that this category is attached to. */
+    /* GROUP(Primary) Returns the Primary Category for the Ultralink that this category is attached to. */
     public function getCurrentPrimary()
     {
-        global $cMaster;
-
-        if( $call = $cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, 'primaryCategory' ) )
+        if( $call = Master::$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, 'primaryCategory' ) )
         {
             return $call;
         }
-        else{ commandResult( 500, "Could not get primary category for " . $this->ul->description() ); }
+        else{ commandResult( 500, "Could not get Primary Category for " . $this->ul->description() ); }
     }
 
     public function __destruct(){ if( isset($this->ul) ){ unset($this->ul); } }
@@ -114,11 +110,9 @@ class Category
     /* GROUP(Actions) Syncs the status of this category to disk in an efficient way. */
     public function sync()
     {
-        global $cMaster;
-        
         if( $this->dirty )
         {
-            if( !$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'setCategory' => $this->json() ) ) ){ commandResult( 500, "Could not set category " . $this->description() . " on to " . $this->ul->description() ); }
+            if( !Master::$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'setCategory' => $this->json() ) ) ){ commandResult( 500, "Could not set category " . $this->description() . " on to " . $this->ul->description() ); }
             $this->dirty = false;
 
             return true;
@@ -130,9 +124,7 @@ class Category
     /* GROUP(Actions) Deletes this category. */
     public function nuke()
     {
-        global $cMaster;
-
-        if( !$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'removeCategory' => $this->json() ) ) ){ commandResult( 500, "Could not remove category " . $this->description() . " from " . $this->ul->description() ); }
+        if( !Master::$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'removeCategory' => $this->json() ) ) ){ commandResult( 500, "Could not remove category " . $this->description() . " from " . $this->ul->description() ); }
     }
 }
 

@@ -2,6 +2,8 @@
 
 // Copyright © 2016 Ultralink Inc.
 
+namespace UL;
+
 require_once classesPath() . '/User.php';
 
 class Achievement
@@ -15,11 +17,9 @@ class Achievement
     /* GROUP(Class Functions) user(User) Returns all the achievements for <b>user</b>. */
     public static function allAchievementsForUser( $user )
     {
-        global $cMaster;
-
         $theAchievements = array();
 
-        if( $call = $cMaster->APICall('0.9.1/user/' . $user->ID, 'achievements' ) )
+        if( $call = Master::$cMaster->APICall('0.9.1/user/' . $user->ID, 'achievements' ) )
         {
             foreach( json_decode( $call, true ) as $achievement ){ array_push( $theAchievements, Achievement::AWithRow( $achievement, $user ) ); }
         }
@@ -31,14 +31,12 @@ class Achievement
     /* GROUP(Class Functions) type(An Achievement type string.) user(User) Returns the achievement of <b>type</b> for <b>user</b>. */
     public static function A( $type, $user )
     {
-        global $cMaster;
-
         $achievement = new self();
 
         $achievement->user = $user;
         $achievement->type = $type;
 
-        if( $call = $cMaster->APICall('0.9.1/user/' . $user->ID, array('achievement' => $type) ) )
+        if( $call = Master::$cMaster->APICall('0.9.1/user/' . $user->ID, array('achievement' => $type) ) )
         {
             $cheevo = json_decode( $call, true );
 

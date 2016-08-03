@@ -2,6 +2,8 @@
 
 // Copyright © 2016 Ultralink Inc.
 
+namespace UL;
+
 require_once configPath() . '/linkTypes.php';
 
 require_once classesPath() . '/Database.php';
@@ -25,14 +27,12 @@ class Ultralink
     public function &__get( $name ){ $this->populateDetails( $name ); return $this->$name; }
     public function __set( $name, $value ){ $this->populateDetails( $name ); $this->$name = $value; }
 
-    /* GROUP(Class Functions) ID(<ultralink identifier> or -1 which indicates a new Ultralink) db(Database, <database identifier> or "" which indicates cDB) initialCategory(Category string. Optionally set if you are creating a new Ultralink) needsReview(Review status number. 0 means no review needed) Produces an ultralink object for the parameters specified.<br><br>Call with the <b>ID</b> parameter (and <b>db</b> if you need to) to simply get an object representing an Ultralink.<br><br>Call with no parameters to create a new Ultralink in cDB (can fill in <b>initialCategory</b> or <b>needsReview</b> if desired).*/
+    /* GROUP(Class Functions) ID(<ultralink identifier> or -1 which indicates a new Ultralink) db(Database, <database identifier> or "" which indicates cDB) initialCategory(Category string. Optionally set if you are creating a new Ultralink) needsReview(Review status number. 0 means no review needed) Produces an Ultralink object for the parameters specified.<br><br>Call with the <b>ID</b> parameter (and <b>db</b> if you need to) to simply get an object representing an Ultralink.<br><br>Call with no parameters to create a new Ultralink in cDB (can fill in <b>initialCategory</b> or <b>needsReview</b> if desired).*/
     public static function U( $ID = -1, $db = '', $initialCategory = '', $needsReview = 0 )
     {
-        global $cDB;
-
         $u = new self();
 
-             if( $db === '' ){ $db = $cDB; }
+             if( $db === '' ){ $db = Database::$cDB; }
         else if( gettype($db) != "object" ){ $db = Database::DB( $db ); }
         $u->db = $db;
 
@@ -90,8 +90,6 @@ class Ultralink
 
     protected function populateDetails( $fieldName )
     {
-        global $cDB;
-
         $fieldName = str_replace( "Dead", '', $fieldName );
 
         if( empty($this->fieldLocks[$fieldName]) )
@@ -170,7 +168,7 @@ class Ultralink
         return null;
     }
 
-    /* GROUP(Information) Returns whether this ultralink exists in the master's storage. */
+    /* GROUP(Information) Returns whether this Ultralink exists in the master's storage. */
     public function doesExist()
     {
         if( $this->ID != -1 )
@@ -200,10 +198,10 @@ class Ultralink
         return false;
     }
 
-    /* GROUP(Information) Returns a string that can be used to identify this ultralink. */
+    /* GROUP(Information) Returns a string that can be used to identify this Ultralink. */
     public function indicatorString(){ return $this->db->ID . "." . $this->ID; }
 
-    /* GROUP(Information) Returns a string describing this ultralink. */
+    /* GROUP(Information) Returns a string describing this Ultralink. */
     public function description(){ return "Ultralink " . $this->db->name . "/" . $this->ID; }
 
     /* PRIVATE GROUP(Representations) toArray(Array to write the preview info to.) reducedFormat(Boolean. If true, writes back preview info in a reduced format) Adds the preview information returned from previewInfo to the provided associative array. */
@@ -234,10 +232,10 @@ class Ultralink
         if( !empty($pi[$metaInfoSignifier])    ){ $toArray[$metaInfoSignifier]    = $pi[$metaInfoSignifier];    }
     }
 
-    /* GROUP(Representations) reducedFormat(Boolean. If true, returns preview info in a reduced format) Returns the set of information sufficient to presenting a small preview of an ultralink: primary word, primary category, primary image, primary image meta info and whether it needs review or not. */
+    /* GROUP(Representations) reducedFormat(Boolean. If true, returns preview info in a reduced format) Returns the set of information sufficient to presenting a small preview of an Ultralink: Primary Word, Primary Category, primary image, primary image meta info and whether it needs review or not. */
     public function previewInfo( $reducedFormat = false ){ return $this->APICall( array( 'previewInfo' => $reducedFormat ), "Could not get preview info for " . $this->description() ); }
 
-    /* GROUP(Representations) Returns a string representing the status of this ultralink at this point in time. */
+    /* GROUP(Representations) Returns a string representing the status of this Ultralink at this point in time. */
     public function statusRecord()
     {
         $record = $this->objectify( true, true );
@@ -245,16 +243,15 @@ class Ultralink
         return json_encode( $record );
     }
 
-    /* GROUP(Representations) withPageFeedback(Boolean. True will add all page feedback for this Ultralink to the result.) addConnectionInfo(Boolean. True will add preview info to every Connection.) addAffiliateKeys(Boolean. True will add the Database affiliate keys to the result.) removeDefaultValues(Boolean. True will remove attributes that are set to the default values.) addPermissions(Boolean. True will add the relevant permission data for cUser on this Ultralink.) reducedFormat(Boolean. If true, returns the object in a reduced format) Returns a JSON string representation of this ultralink. */
+    /* GROUP(Representations) withPageFeedback(Boolean. True will add all page feedback for this Ultralink to the result.) addConnectionInfo(Boolean. True will add preview info to every Connection.) addAffiliateKeys(Boolean. True will add the Database affiliate keys to the result.) removeDefaultValues(Boolean. True will remove attributes that are set to the default values.) addPermissions(Boolean. True will add the relevant permission data for cUser on this Ultralink.) reducedFormat(Boolean. If true, returns the object in a reduced format) Returns a JSON string representation of this Ultralink. */
     public function json( $withPageFeedback = false, $addConnectionInfo = false, $addAffiliateKeys = false, $addPermissions = false, $removeDefaultValues = false, $reducedFormat = false ){ return json_encode( $this->objectify( $withPageFeedback, $addConnectionInfo, $addAffiliateKeys, $addPermissions, $removeDefaultValues, $reducedFormat ) ); }
 
-    /* GROUP(Representations) withPageFeedback(Boolean. True will add all page feedback for this Ultralink to the result.) addConnectionInfo(Boolean. True will add preview info to every Connection.) addAffiliateKeys(Boolean. True will add the Database affiliate keys to the result.) removeDefaultValues(Boolean. True will remove attributes that are set to the default values.) addPermissions(Boolean. True will add the relevant permission data for cUser on this Ultralink.) reducedFormat(Boolean. If true, returns the object in a reduced format) Returns a serializable object representation of the ultralink. Parameters indicate what sets of additional information should be included and in what format.<br><br><b>addAffiliateKeys</b> and <b>addPermissions</b> are usually only used when visually editing the Ultralink.*/
+    /* GROUP(Representations) withPageFeedback(Boolean. True will add all page feedback for this Ultralink to the result.) addConnectionInfo(Boolean. True will add preview info to every Connection.) addAffiliateKeys(Boolean. True will add the Database affiliate keys to the result.) removeDefaultValues(Boolean. True will remove attributes that are set to the default values.) addPermissions(Boolean. True will add the relevant permission data for cUser on this Ultralink.) reducedFormat(Boolean. If true, returns the object in a reduced format) Returns a serializable object representation of the Ultralink. Parameters indicate what sets of additional information should be included and in what format.<br><br><b>addAffiliateKeys</b> and <b>addPermissions</b> are usually only used when visually editing the Ultralink.*/
     public function objectify( $withPageFeedback = false, $addConnectionInfo = false, $addAffiliateKeys = false, $addPermissions = false, $removeDefaultValues = false, $reducedFormat = false )
     {
-        global $cUser;
         global $authLevels;
 
-        // First test to see if the ultralink is even there still
+        // First test to see if the Ultralink is even there still
         if( !$this->doesExist() ){ return false; }
 
         $needsReviewSignifier = 'needsReview';
@@ -358,7 +355,7 @@ class Ultralink
         {
             $theConnection = array( 'aID' => intval($connection->ulA()->ID), $connectionSignifier => $connection->connection(), 'bID' => intval($connection->ulB()->ID) );
 
-            // Get useful preview data for visualizing the connections to this ultralink
+            // Get useful preview data for visualizing the connections to this Ultralink.
             if( $addConnectionInfo )
             {
                 $connection->getOtherConnection( $this )->addPreviewInfo( $theConnection, $reducedFormat );
@@ -402,22 +399,22 @@ class Ultralink
 
         if( $addPermissions )
         {
-            if( ($cUser->ID != 0) && ($this->db->ID == 0) && ($cUser->mainlineAuth == $authLevels['Contributor']) )
+            if( (User::$cUser->ID != 0) && ($this->db->ID == 0) && (User::$cUser->mainlineAuth == $authLevels['Contributor']) )
             {
-                $fullResult['grants'] = $cUser->grants;
+                $fullResult['grants'] = User::$cUser->grants;
 
-                $currentDailyEditCount = $cUser->todaysEditCount();
+                $currentDailyEditCount = User::$cUser->todaysEditCount();
 
-                //$fullResult['hasSufficientGrant']    = $cUser->hasSufficientGrantForUltralinks( $this->ID );
-                $fullResult['underEditLimit']        = $cUser->underEditLimit( $currentDailyEditCount );
-                //$fullResult['underImpactLimit']      = $cUser->underImpactLimit( $this->ID );
+                //$fullResult['hasSufficientGrant']    = User::$cUser->hasSufficientGrantForUltralinks( $this->ID );
+                $fullResult['underEditLimit']        = User::$cUser->underEditLimit( $currentDailyEditCount );
+                //$fullResult['underImpactLimit']      = User::$cUser->underImpactLimit( $this->ID );
 
                 $fullResult['currentDailyEditCount'] = $currentDailyEditCount;
-                $fullResult['currentDailyEditLimit'] = $cUser->dailyEditLimit;
+                $fullResult['currentDailyEditLimit'] = User::$cUser->dailyEditLimit;
             }
             else
             {
-                $fullResult['auth'] = $cUser->authForDB( $this->db );
+                $fullResult['auth'] = User::$cUser->authForDB( $this->db );
             }
         }
 
@@ -442,10 +439,10 @@ class Ultralink
     /* GROUP(Analytics) timeScale(The time scale of the data we are looking at. Values can be <b>monthly</b>, <b>daily</b> or <b>hourly</b>.) timeDuration(The numeric length of the time slice that the data should examine in units defined by <b>timeScale</b>.) Returns chart data for historical occurrence counts for a specified time period. */
     public function occurrences( $timeScale, $timeDuration ){ return $this->APICall( array('occurrences' => "", 'timeScale' => $timeScale, 'timeDuration' => $timeDuration), "Could not retrieve occurrences for " . $this->description() ); }
 
-    /* GROUP(Analytics) pagePath(A URL path fragment determing the scope of the results.) restrictToThis(Boolean. Indicates whether the results should be restricted to only the exact pagePath) timeRestrict(Determines if the results should be restricted in any way. Values can be cache or alltime.) timeScale(The time scale of the data we are looking at. Values can be <b>monthly</b>, <b>daily</b> or <b>hourly</b>.) timeDuration(The numeric length of the time slice that the data should examine in units defined by <b>timeScale</b>.) getAggregation(Boolean. Determines if the extra aggreggation information should be include) Returns a set of data outlining click activity for this ultralink in a specifc URL path fragment within a specific time span. Can set whether the results should be restricted to only data connected to what is in the current content cache. Can restrict the results to only the exact path instead of all the paths under it. Can also add specific data on aggreggation. */
+    /* GROUP(Analytics) pagePath(A URL path fragment determing the scope of the results.) restrictToThis(Boolean. Indicates whether the results should be restricted to only the exact pagePath) timeRestrict(Determines if the results should be restricted in any way. Values can be cache or alltime.) timeScale(The time scale of the data we are looking at. Values can be <b>monthly</b>, <b>daily</b> or <b>hourly</b>.) timeDuration(The numeric length of the time slice that the data should examine in units defined by <b>timeScale</b>.) getAggregation(Boolean. Determines if the extra aggreggation information should be include) Returns a set of data outlining click activity for this Ultralink in a specifc URL path fragment within a specific time span. Can set whether the results should be restricted to only data connected to what is in the current content cache. Can restrict the results to only the exact path instead of all the paths under it. Can also add specific data on aggreggation. */
     public function path( $pagePath, $restrictToThis, $timeRestrict, $timeScale, $timeDuration, $getAggregation ){ return $this->APICall( array('path' => "", 'timeScale' => $timeScale, 'timeDuration' => $timeDuration, 'pagePath' => $pagePath, 'restrictToThis' => $restrictToThis, 'resultRestrict' => $timeRestrict, 'getAggregation' => $getAggregation), "Could not retrieve path for " . $this->description() ); }
 
-    /* GROUP(Analytics) website_ID(A website ID.) offset(Pagination offset.) limit(Pagination limit. Default: <b>100</b>, Max: <b>1000</b>.) Returns a list of pages on a given website that this ultralink is known to be on. */
+    /* GROUP(Analytics) website_ID(A website ID.) offset(Pagination offset.) limit(Pagination limit. Default: <b>100</b>, Max: <b>1000</b>.) Returns a list of pages on a given website that this Ultralink is known to be on. */
     public function instancePages( $website_ID, $offset = 0, $limit = 100 )
     {
         if( empty($offset) ){ $offset =   0; }
@@ -454,7 +451,7 @@ class Ultralink
         return $this->APICall( array('instancePages' => $website_ID, 'offset' => $offset, 'limit' => $limit), "Could not get the instance pages for " . $this->description() );
     }
 
-    /* GROUP(Analytics) offset(Pagination offset.) limit(Pagination limit. Default: <b>100</b>, Max: <b>1000</b>.) Returns a list of websites that this ultralink is known to be on. */
+    /* GROUP(Analytics) offset(Pagination offset.) limit(Pagination limit. Default: <b>100</b>, Max: <b>1000</b>.) Returns a list of websites that this Ultralink is known to be on. */
     public function instanceWebsites( $offset = 0, $limit = 100 )
     {
         if( empty($offset) ){ $offset =   0; }
@@ -466,19 +463,19 @@ class Ultralink
     /* GROUP(Analytics) commons(An array of commonality description objects describing the calculations.) pullLinkType(A link type determining what link should be pulled out and included in the answer sets.) getIntersect(A boolean indicating if an intersection array of all the commonality sets should also be returned.) Returns a result set for each commonality description objects passed in. Returns resultant sets that include the desired link type. Can optionally return an intersection of the resultant sets as well. Resultant sets sorted by commonality value descending. */
     public function connectionCommon( $commons, $pullLinkType, $getIntersect = false ){ return $this->APICall( array('connectionCommon' => $commons, 'uID' => $this->ID, 'pullLinkType' => $pullLinkType, 'getIntersect' => $getIntersect), "Could not get the connection common for " . $this->description() ); }
 
-    /* GROUP(Analytics) Returns a set of ultralinks that have a common word with this one. */
-    public function wordCommon(){ return $this->APICall( 'wordCommon', "Could not get common ultralinks for " . $this->description() ); }
+    /* GROUP(Analytics) Returns a set of Ultralinks that have a common word with this one. */
+    public function wordCommon(){ return $this->APICall( 'wordCommon', "Could not get common Ultralinks for " . $this->description() ); }
 
-    /* GROUP(Analytics) Returns a top 20 list of ultralinks that appear in the same fragments as this one ordered by occurrence number descending. */
-    public function related(){ return $this->APICall( 'related', "Could not get related ultralinks for " . $this->description() ); }
+    /* GROUP(Analytics) Returns a top 20 list of Ultralinks that appear in the same fragments as this one ordered by occurrence number descending. */
+    public function related(){ return $this->APICall( 'related', "Could not get related Ultralinks for " . $this->description() ); }
 
-    /* GROUP(Actions) nr(Review status number. 0 means no review needed) Sets this ultralink's needsReview value. */
+    /* GROUP(Actions) nr(Review status number. 0 means no review needed) Sets this Ultralink's needsReview value. */
     public function setNeedsReview( $nr = 0 ){ if( $nr != $this->needsReview ){ $this->dirtyNeedsReview = true; } $this->needsReview = $nr; }
 
-    /* GROUP(Actions) modificationID(A determination status. Values can be <b>GOOD</b>, <b>BAD</b> and <b>REVERTED</b>.) determination() Sets the status of the specified modification and sets the state of the ultralink to what it was before the modification if the determination is "REVERTED". */
+    /* GROUP(Actions) modificationID(A determination status. Values can be <b>GOOD</b>, <b>BAD</b> and <b>REVERTED</b>.) determination() Sets the status of the specified modification and sets the state of the Ultralink to what it was before the modification if the determination is "REVERTED". */
     public function modificationDetermination( $modificationID, $determination ){ return $this->APICall( array( 'modificationDetermination' => $modificationID, 'determination' => $determination ), "Could not set determination on " . $this->description() ); }
 
-    /* GROUP(Actions) destDB(<database identifier>) Creates a copy of this ultralink in another specified database. */
+    /* GROUP(Actions) destDB(<database identifier>) Creates a copy of this Ultralink in another specified database. */
     public function copyIntoDB( $destDB )
     {
         $nuUL = Ultralink::U( -1, $destDB );
@@ -490,10 +487,10 @@ class Ultralink
         $nuUL->sync();
     }
 
-    /* GROUP(Actions) mergeIDs(A JSON object listing the IDs of the ultralinks to merge into this one.) Merges all the given ultralinks into this one. */
+    /* GROUP(Actions) mergeIDs(A JSON object listing the IDs of the Ultralinks to merge into this one.) Merges all the given Ultralinks into this one. */
     public function merge( $mergeIDs ){ return $this->APICall( array( 'merge' => $mergeIDs ), "Could not perform merge into " . $this->description() ); }
 
-    /* GROUP(Actions) Removes everything from this ultralink. */
+    /* GROUP(Actions) Removes everything from this Ultralink. */
     public function blankSlate( $pageFeedbackToo = false )
     {
         $this->removeAllWords();
@@ -504,7 +501,7 @@ class Ultralink
         if( $pageFeedbackToo ){ $this->removeAllPageFeedback(); }
     }
 
-    /* GROUP(Actions) nuState(A JSON object representing the Ultralink state.) Sets the data for this ultralink from the information found in <b>nuState</b>. */
+    /* GROUP(Actions) nuState(A JSON object representing the Ultralink state.) Sets the data for this Ultralink from the information found in <b>nuState</b>. */
     public function setFromObject( $nuState )
     {
         if( !empty($nuState['time']) ){ $this->time = $nuState['time']; }
@@ -529,7 +526,7 @@ class Ultralink
         if( !empty($nuState['pageFeedback']) ){ foreach( $nuState['pageFeedback'] as $pf ){ $this->setPageFeedbackFromObject( $pf ); } }
     }
 
-    /* GROUP(Actions) nuState(A JSON object representing the Ultralink state.) Sets the data for this ultralink from the information found in <b>nuState</b> and syncs the changes to disk. */
+    /* GROUP(Actions) nuState(A JSON object representing the Ultralink state.) Sets the data for this Ultralink from the information found in <b>nuState</b> and syncs the changes to disk. */
     public function syncFromObject( $nuState )
     {
         $this->setFromObject( $nuState );
@@ -575,20 +572,18 @@ class Ultralink
         }
     }
 
-    /* GROUP(Actions) outputDifference(Boolean. If true, then echo the differences from the previous state.) Syncs the changes to this ultralink to disk in an efficient manner. */
+    /* GROUP(Actions) outputDifference(Boolean. If true, then echo the differences from the previous state.) Syncs the changes to this Ultralink to disk in an efficient manner. */
     public function sync( $outputDifference = false )
     {
-        global $cMaster;
-        global $cUser;
         global $authLevels;
 
-        if( $cUser->authForDB( $this->db ) <= $authLevels['Contributor'] )
+        if( User::$cUser->authForDB( $this->db ) <= $authLevels['Contributor'] )
         {
-            if( $call = $cMaster->APICall('0.9.1/db/' . $this->db->ID . '/ul/' . $this->ID, array( 'modify' => $this->json() ) ) )
+            if( $call = Master::$cMaster->APICall('0.9.1/db/' . $this->db->ID . '/ul/' . $this->ID, array( 'modify' => $this->json() ) ) )
             {
                 $this->ID = intval($call);
             }
-            else{ commandResult( 500, "Could not create a new ultralink in " . $this->db->description() ); }
+            else{ commandResult( 500, "Could not create a new Ultralink in " . $this->db->description() ); }
         }
         else
         {
@@ -600,16 +595,16 @@ class Ultralink
             $categoriesDifferent    = false;
             $urlsDifferent          = false;
 
-            // Freshly created ultralink, here on this machine
+            // Freshly created Ultralink, here on this machine
             if( $this->ID == -1 )
             {
                 $categoryString = Category::$defaultCategory; if( $primaryCategory = $this->getPrimaryCategory() ){ $categoryString = $primaryCategory->categoryString(); }
 
-                if( $call = $cMaster->APICall('0.9.1/db/' . $this->db->ID . '/ul', array( 'create' => "", 'category' => $categoryString, 'needsReview' => $this->needsReview ) ) )
+                if( $call = Master::$cMaster->APICall('0.9.1/db/' . $this->db->ID . '/ul', array( 'create' => "", 'category' => $categoryString, 'needsReview' => $this->needsReview ) ) )
                 {
                     $this->ID = intval($call);
                 }
-                else{ commandResult( 500, "Could not create a new ultralink in " . $this->db->description() ); }
+                else{ commandResult( 500, "Could not create a new Ultralink in " . $this->db->description() ); }
             }
 
             if( $this->dirtyNeedsReview )
@@ -667,24 +662,24 @@ class Ultralink
         }
     }
 
-    /* GROUP(Actions) Deletes this ultralink. */
+    /* GROUP(Actions) Deletes this Ultralink. */
     public function nuke(){ return $this->APICall( 'nuke', "Could not nuke " . $this->description() ); }
 
 // Words
 
-    /* GROUP(Words) Returns the primary word if set. If not, returns the first word listed. */
+    /* GROUP(Words) Returns the Primary Word if set. If not, returns the first word listed. */
     public function getFirstWord(){ $word = null; if( !($word = $this->getPrimaryWord()) ){ if( count($this->words) ){ $word = $this->words[0]; } } return $word; }
 
-    /* GROUP(Words) Returns the primary word or null if not set. */
+    /* GROUP(Words) Returns the Primary Word or null if not set. */
     public function getPrimaryWord(){ foreach( $this->words as &$theWord ){ if( $theWord->primaryWord() ){ return $theWord; } } return null; }
 
-    /* GROUP(Words) string(A word string.) nuke(Boolean. If true then remove the Word object found from the Ultralink.) Returns the word on this ultralink associated with <b>string</b>. */
+    /* GROUP(Words) string(A word string.) nuke(Boolean. If true then remove the Word object found from the Ultralink.) Returns the word on this Ultralink associated with <b>string</b>. */
     public function getWord( $wordString, $nuke = false ){ foreach( $this->words as $w => &$theWord ){ if( $theWord->wordString() == $wordString ){ if( $nuke ){ array_splice( $this->words, $w, 1 ); } return $theWord; } } return null; }
 
-    /* GROUP(Words) string(A word string.) caseSensitive(Boolean. 1 indicates that this Word is case sensitive.) primaryWord(Boolean. 1 indicates that this word is the primary on this Ultralink.) commonalityThreshold(A number indicating the commonality threshold.) nuke(Boolean. If true then remove the Word object found from the Ultralink.) Returns the word on this ultralink associated with the parameters. */
+    /* GROUP(Words) string(A word string.) caseSensitive(Boolean. 1 indicates that this Word is case sensitive.) primaryWord(Boolean. 1 indicates that this word is the primary on this Ultralink.) commonalityThreshold(A number indicating the commonality threshold.) nuke(Boolean. If true then remove the Word object found from the Ultralink.) Returns the word on this Ultralink associated with the parameters. */
     public function getWordFull( $wordString, $caseSensitive, $primaryWord, $commonalityThreshold, $nuke = false ){ foreach( $this->words as $w => &$theWord ){ if( ($theWord->wordString() == $wordString) && ($theWord->caseSensitive() == $caseSensitive) && ($theWord->primaryWord() == $primaryWord) && ($theWord->commonalityThreshold() == $commonalityThreshold) ){ if( $nuke ){ array_splice( $this->words, $w, 1 ); } return $theWord; } } return null; }
 
-    /* GROUP(Words) o(A JSON object representing the Word.) Sets a word on this ultralink based on the information in <b>o</b>. */
+    /* GROUP(Words) o(A JSON object representing the Word.) Sets a word on this Ultralink based on the information in <b>o</b>. */
     public function setWordFromObject( $o )
     {
         if( !empty($o['word']) )
@@ -703,7 +698,7 @@ class Ultralink
         return null;
     }
 
-    /* GROUP(Words) string(A word string.) caseSensitive(Boolean. 1 indicates that this Word is case sensitive.) primaryWord(Boolean. 1 indicates that this word is the primary on this Ultralink.) commonalityThreshold(A number indicating the commonality threshold.) Sets a word on this ultralink. Adds it if it does exist yet and modifies it if it does. */
+    /* GROUP(Words) string(A word string.) caseSensitive(Boolean. 1 indicates that this Word is case sensitive.) primaryWord(Boolean. 1 indicates that this word is the primary on this Ultralink.) commonalityThreshold(A number indicating the commonality threshold.) Sets a word on this Ultralink. Adds it if it does exist yet and modifies it if it does. */
     public function setWord( $wordString, $caseSensitive = null, $primaryWord = null, $commonalityThreshold = null )
     {
         if( $theWord = $this->getWord( $wordString ) )
@@ -743,7 +738,7 @@ class Ultralink
         array_push( $this->wordsDead, $this->getWord( $w, true ) );
     }
 
-    /* GROUP(Words) Removes all existing words from this ultralink. */
+    /* GROUP(Words) Removes all existing words from this Ultralink. */
     public function removeAllWords(){ $this->wordsDead = array_merge( $this->wordsDead, $this->words ); $this->words = array(); }
 
     /* GROUP(Words) w(Word or a word string.) nuWord(Word or a word string.) caseSensitive(Boolean. 1 indicates that this Word is case sensitive.) primaryWord(Boolean. 1 indicates that this word is the primary on this Ultralink.) commonalityThreshold(A number indicating the commonality threshold.) Replaces word <b>w</b> with a new word. */
@@ -761,10 +756,10 @@ class Ultralink
 
 // Categories
 
-    /* GROUP(Categories) Returns the primary category for this ultralink or returns null if it doesn't exist. */
+    /* GROUP(Categories) Returns the Primary Category for this Ultralink or returns null if it doesn't exist. */
     public function getPrimaryCategory(){ foreach( $this->categories as &$theCategory ){ if( $theCategory->primaryCategory() ){ return $theCategory; } } return null; }
 
-    /* GROUP(Categories) string(A category string.) nuke(Boolean. If true then remove the Category object found from the Ultralink.) Returns the category on this ultralink identified by <b>string</b>. */
+    /* GROUP(Categories) string(A category string.) nuke(Boolean. If true then remove the Category object found from the Ultralink.) Returns the category on this Ultralink identified by <b>string</b>. */
     public function getCategory( $categoryString, $nuke = false ){ foreach( $this->categories as $c => &$theCategory ){ if( $theCategory->categoryString() == $categoryString ){ if( $nuke ){ array_splice( $this->categories, $c, 1 ); } return $theCategory; } } return null; }
 
     /* GROUP(Categories) string(A category string.) primaryCategory(Indicates whether this new Category should be the primary.) Sets a category based on <b>string</b>. Adds it if it doens't exist and modifies it if it does. */
@@ -803,7 +798,7 @@ class Ultralink
         array_push( $this->categoriesDead, $this->getCategory( $c, true ) );
     }
 
-    /* GROUP(Categories) Removes all categories from this ultralink. */
+    /* GROUP(Categories) Removes all categories from this Ultralink. */
     public function removeAllCategories(){ $this->categoriesDead = array_merge( $this->categoriesDead, $this->categories ); $this->categories = array(); }
 
     /* GROUP(Categories) c(Category or category string.) nuCategory(A category string.) primaryCategory(Indicates whether this new Category should be the primary.) Replaces category <b>c</b> with the passed values. */
@@ -841,7 +836,7 @@ class Ultralink
         return $filteredResults;
     }
 
-    /* GROUP(Links) url_ID(A URL or URL ID.) type(A link type.) nuke(Boolean. If true then remove the Link object found from the Ultralink.) Returns the link attached to this ultralink identified by <b>url_ID</b>. */
+    /* GROUP(Links) url_ID(A URL or URL ID.) type(A link type.) nuke(Boolean. If true then remove the Link object found from the Ultralink.) Returns the link attached to this Ultralink identified by <b>url_ID</b>. */
     public function getLink( $url_ID, $type = null, $nuke = false )
     {
         if( !is_numeric($url_ID) )
@@ -864,7 +859,7 @@ class Ultralink
         return null;
     }
 
-    /* GROUP(Links) o(A JSON object representing the Link.) Sets a link on this ultralink based on the information in <b>o</b>. */
+    /* GROUP(Links) o(A JSON object representing the Link.) Sets a link on this Ultralink based on the information in <b>o</b>. */
     public function setLinkFromObject( $o )
     {
         if( !empty($o['ID']) && !empty($o['type']) )
@@ -887,7 +882,7 @@ class Ultralink
         return null;
     }
 
-    /* GROUP(Links) url(A URL or URL ID.) type(A link type.) language(A language code string.) country(A country code string.) primaryLink(Indicates that the links are primary) metaInfo(A JSON object descriing extra meta info about the Link.) Sets a link on this ultralink. Adds it if it doesn't exist and modifies it if it does. */
+    /* GROUP(Links) url(A URL or URL ID.) type(A link type.) language(A language code string.) country(A country code string.) primaryLink(Indicates that the links are primary) metaInfo(A JSON object descriing extra meta info about the Link.) Sets a link on this Ultralink. Adds it if it doesn't exist and modifies it if it does. */
     public function setLink( $url, $type = null, $language = null, $country = null, $primaryLink = null, $metaInfo = null )
     {
         $url_ID = $url; if( !is_numeric($url) ){ $url_ID = $this->db->getURLID( $url ); if( is_null($type) ){ $type = detectLinkType( $url ); } }
@@ -941,7 +936,7 @@ class Ultralink
         if( $theLink = $this->getLink( $link->url_ID(), $link->type(), true ) ){ array_push( $this->linksDead, $theLink ); }
     }
 
-    /* GROUP(Links) type(A link type.) Removes all links of <b>type</b> from this ultralink. */
+    /* GROUP(Links) type(A link type.) Removes all links of <b>type</b> from this Ultralink. */
     public function removeLinksOfType( $type )
     {
         $deadLinks = array();
@@ -950,7 +945,7 @@ class Ultralink
         foreach( $deadLinks as $link ){ $this->removeLink( $link ); }
     }
 
-    /* GROUP(Links) Removes all links from this ultralink. */
+    /* GROUP(Links) Removes all links from this Ultralink. */
     public function removeAllLinks(){ $this->linksDead = array_merge( $this->linksDead, $this->links ); $this->links = array(); }
 
     /* GROUP(Links) link(Link or URL string.) nuURL(A URL or URL ID.) type(A link type.) Replaces <b>link</b> with another link based on <b>nuURL</b>. */
@@ -967,7 +962,7 @@ class Ultralink
 
 // Connections
 
-    /* GROUP(Connections) ulA(Ultralink or ultralink ID.) ulB(Ultralink or ultralink ID.) nuke(Boolean. If true then remove the Connection object found from the Ultralink.) Returns the connection associated with ultralinks or IDs <b>ulA</b> and <b>ulB</b>. */
+    /* GROUP(Connections) ulA(Ultralink or Ultralink ID.) ulB(Ultralink or Ultralink ID.) nuke(Boolean. If true then remove the Connection object found from the Ultralink.) Returns the connection associated with Ultralinks or IDs <b>ulA</b> and <b>ulB</b>. */
     public function getConnection( $ulA, $ulB, $nuke = false )
     {
         if( gettype($ulA) != "object" ){ $ulA = Ultralink::U( $ulA, $this->db ); }
@@ -985,7 +980,7 @@ class Ultralink
         return null;
     }
 
-    /* GROUP(Connections) connection(A connection type string.) Returns an array of connections on this ultralink that have the connection type string <b>connection</b>. */
+    /* GROUP(Connections) connection(A connection type string.) Returns an array of connections on this Ultralink that have the connection type string <b>connection</b>. */
     public function queryConnections( $connection )
     {
         $filteredResults = array();
@@ -998,7 +993,7 @@ class Ultralink
         return $filteredResults;
     }
 
-    /* GROUP(Connections) o(A JSON object representing the Connection.) Sets a connection on this ultralink based on the information in <b>o</b>. */
+    /* GROUP(Connections) o(A JSON object representing the Connection.) Sets a connection on this Ultralink based on the information in <b>o</b>. */
     public function setConnectionFromObject( $o )
     {
         $aID        = null;
@@ -1012,7 +1007,7 @@ class Ultralink
         return $this->setConnection( $aID, $bID, $connection );
     }
 
-    /* GROUP(Connections) ulAIn(Connection or ultralink ID) ulBIn(Connection or ultralink ID) connection(A connection type string) otherDid(Boolean. If true, sets the Connection on the other Ultralink.) Sets a connection for the ultralinks or IDs <b>ulAIn</b> and <b>ulBIn</b>. Adds it if it doesn't exist and modifies it if it doesn't. */
+    /* GROUP(Connections) ulAIn(Connection or Ultralink ID) ulBIn(Connection or Ultralink ID) connection(A connection type string) otherDid(Boolean. If true, sets the Connection on the other Ultralink.) Sets a connection for the Ultralinks or IDs <b>ulAIn</b> and <b>ulBIn</b>. Adds it if it doesn't exist and modifies it if it doesn't. */
     public function setConnection( $ulAIn, $ulBIn, $connection = "", $otherDid = false )
     {
         $ulA = "";
@@ -1052,10 +1047,10 @@ class Ultralink
         return $newConnection;
     }
 
-    /* GROUP(Connections) ulB(Connection or ultralink ID) connection(A connection type string) Adds a connection between this ultralink and <b>ulB</b>. */
+    /* GROUP(Connections) ulB(Connection or Ultralink ID) connection(A connection type string) Adds a connection between this Ultralink and <b>ulB</b>. */
     public function addConnection( $ulB, $connection = "" ){ return $this->setConnection( $this, $ulB, $connection ); }
 
-    /* GROUP(Connections) c(Connection or ultralink ID) connection(A connection type string) Removes the connection <b>c</b>. */
+    /* GROUP(Connections) c(Connection or Ultralink ID) connection(A connection type string) Removes the connection <b>c</b>. */
     public function removeConnection( $c, $connection = "" )
     {
         if( gettype($c) == "object" )
@@ -1071,7 +1066,7 @@ class Ultralink
         }
     }
 
-    /* GROUP(Connections) Removes all connections from this ultralink. */
+    /* GROUP(Connections) Removes all connections from this Ultralink. */
     public function removeAllConnections()
     {
         $this->connectionsDead = array_merge( $this->connectionsDead, $this->connections );
@@ -1080,10 +1075,10 @@ class Ultralink
 
 // Page Feedback
 
-    /* GROUP(Page Feedback) page_ID(A page ID) word(A word string.) nuke(Boolean. If true then remove the PageFeedback object found from the Ultralink.) Returns the page feedback for this ultralink on a given page ID for a word string. The word string may be "". Can optionally remove it from the ultralink. */
+    /* GROUP(Page Feedback) page_ID(A page ID) word(A word string.) nuke(Boolean. If true then remove the PageFeedback object found from the Ultralink.) Returns the page feedback for this Ultralink on a given page ID for a word string. The word string may be "". Can optionally remove it from the Ultralink. */
     public function getPageFeedback( $page_ID, $word, $nuke = false ){ foreach( $this->pageFeedback as $pf => &$thePageFeedback ){ if( ($thePageFeedback->page_ID() == $page_ID) && ($thePageFeedback->word() == $word) ){ if( $nuke ){ array_splice( $this->pageFeedback, $pf, 1 ); } return $thePageFeedback; } } return null; }
 
-    /* GROUP(Page Feedback) o(A JSON object representing the PageFeedback.) Sets a page feedback on this ultralink based on the information in <b>o</b>. */
+    /* GROUP(Page Feedback) o(A JSON object representing the PageFeedback.) Sets a page feedback on this Ultralink based on the information in <b>o</b>. */
     public function setPageFeedbackFromObject( $o )
     {
         if( !empty($o['page_ID']) )
@@ -1136,10 +1131,10 @@ class Ultralink
         return null;
     }
 
-    /* GROUP(Page Feedback) pf(PageFeedback) Removes page feedback <b>pf</b> from this ultralink. */
+    /* GROUP(Page Feedback) pf(PageFeedback) Removes page feedback <b>pf</b> from this Ultralink. */
     public function removePageFeedback( $pf ){ array_push( $this->pageFeedbackDead, $this->getPageFeedback( $pf->page_ID(), $pf->word(), true ) ); }
 
-    /* GROUP(Page Feedback) Removes all page feedback from this ultralink. */
+    /* GROUP(Page Feedback) Removes all page feedback from this Ultralink. */
     public function removeAllPageFeedback(){ $this->pageFeedbackDead = array_merge( $this->pageFeedbackDead, $this->pageFeedback ); $this->pageFeedback = array(); }
 
 //
@@ -1147,10 +1142,10 @@ class Ultralink
     /* GROUP(Annotation) Returns the URL for this Ultralink's annotation link. */
     public function annotationLink(){ global $masterPath; return $masterPath . "annotation/" . $this->db->ID . "/" . $this->ID; }
 
-    /* GROUP(Annotation) language(A language code string.) country(A country code string.) Gets the annotation content for this ultralink for a given language and country bias if any. */
+    /* GROUP(Annotation) language(A language code string.) country(A country code string.) Gets the annotation content for this Ultralink for a given language and country bias if any. */
     public function annotation( $language = "", $country = "" ){ return $this->APICallSub('/annotation', array( 'language' => $language ,'country' => $country ), "Could not retrieve annotation for " . $this->description()); }
 
-    /* GROUP(Annotation) text(Annotation text.) type(The type of content being stored.) language(A language code string.) country(A country code string.) Sets the annotation data for this ultralink to <b>text</b> on <b>langauge</b> and <b>country</b>. */
+    /* GROUP(Annotation) text(Annotation text.) type(The type of content being stored.) language(A language code string.) country(A country code string.) Sets the annotation data for this Ultralink to <b>text</b> on <b>langauge</b> and <b>country</b>. */
     public function setAnnotation( $text, $type="text", $language = "", $country = "" ){ return $this->APICall( array( 'set' => $text, 'type' => $type, 'language' => $language ,'country' => $country ), "Could not insert/update annotation for " . $this->description() ); }
 
     /* GROUP(Holding Tank) word(A word string.) caseSensitive(Boolean. 1 indicates that this Word is case sensitive.) resolution(The decision string whether to <b>accept</b> or <b>reject</b> the submitted word.) contributor(<user identifier>) Removes the submission entry for the new word. If the resolution is 'accept' then it adds the word. */
@@ -1168,32 +1163,32 @@ class Ultralink
     /* GROUP(Holding Tank) urlID(A URL ID) type(A link type.) problem(The problem of the above URL.) contributor(<user identifier>) Removes a submitted link from the holding tank or a specific type, problem type and contributor. */
     public function dismissReportedLink( $urlID, $type, $problem, $contributor ){ return $this->APICall( array( 'dismissReportedLink' => $urlID, 'type' => $type, 'problem' => $problem, 'contributor' => $contributor ), "Couldn't remove the reported link (urlID: " . $urlID . ", type: " . $type . ", problem: " . $problem . ")" ); }
 
-    /* GROUP(Holding Tank) con_ID(An ID for a connected ultralink.) problem(The problem with the connection.) Adds a connection complaint into the holding tank for this ultralink. */
+    /* GROUP(Holding Tank) con_ID(An ID for a connected Ultralink.) problem(The problem with the connection.) Adds a connection complaint into the holding tank for this Ultralink. */
     public function reportConnection( $con_ID, $problem ){ return $this->APICall( array( 'reportConnection' => $con_ID, 'problem' => $problem ), "Could not enter in connection report description_ID: " . $this->description() . ", con_ID: " . $con_ID . ", problem: " . $problem ); }
 
-    /* GROUP(Holding Tank) url_ID(A URL ID) type(A link type.) problem(The problem of the above URL.) Adds a link complaint into the holding tank for this ultralink. */
+    /* GROUP(Holding Tank) url_ID(A URL ID) type(A link type.) problem(The problem of the above URL.) Adds a link complaint into the holding tank for this Ultralink. */
     public function reportLink( $url_ID, $type, $problem ){ return $this->APICall( array( 'reportLink' => $url_ID, 'type' => $type, 'problem' => $problem ), "Could not enter in link report description_ID: " . $this->description() . ", url_ID: " . $url_ID . ", type: " . $type . ", problem: " . $problem ); }
 
-    /* GROUP(Holding Tank) category(A category string.) Adds a category into the holding tank for this ultralink. */
-    public function submitCategory( $category ){ return $this->APICall( array( 'submitCategory' => $category ), "Could not enter in submitted category " . $category . " ultralink: " . $this->description() ); }
+    /* GROUP(Holding Tank) category(A category string.) Adds a category into the holding tank for this Ultralink. */
+    public function submitCategory( $category ){ return $this->APICall( array( 'submitCategory' => $category ), "Could not enter in submitted category " . $category . " Ultralink: " . $this->description() ); }
 
-    /* GROUP(Holding Tank) connection(A connection type string.) connection_ID(The ID of another ultralink to connect to.) Adds a connection into the holding tank for this ultralink. */
-    public function submitConnection( $connection, $connection_ID ){ return $this->APICall( array( 'submitConnection' => $connection, 'connection_ID' => $connection_ID ), "Could not enter in submitted connection " . $connection . " ultralink: " . $this->description() . " connection_ID: " . $connection_ID ); }
+    /* GROUP(Holding Tank) connection(A connection type string.) connection_ID(The ID of another Ultralink to connect to.) Adds a connection into the holding tank for this Ultralink. */
+    public function submitConnection( $connection, $connection_ID ){ return $this->APICall( array( 'submitConnection' => $connection, 'connection_ID' => $connection_ID ), "Could not enter in submitted connection " . $connection . " Ultralink: " . $this->description() . " connection_ID: " . $connection_ID ); }
 
-    /* GROUP(Holding Tank) URL(A URL string.) type(A link type.) Adds a link into the holding tank for this ultralink. */
-    public function submitLink( $URL, $type ){ return $this->APICall( array( 'submitLink' => $URL, 'type' => $type ), "Could not enter in submitted link ultralink: " . $this->description() . ", URL: " . $URL . ", type: " . $type ); }
+    /* GROUP(Holding Tank) URL(A URL string.) type(A link type.) Adds a link into the holding tank for this Ultralink. */
+    public function submitLink( $URL, $type ){ return $this->APICall( array( 'submitLink' => $URL, 'type' => $type ), "Could not enter in submitted link Ultralink: " . $this->description() . ", URL: " . $URL . ", type: " . $type ); }
 
-    /* GROUP(Holding Tank) word(A word string.) caseSensitive(Boolean. 1 indicates that this Word is case sensitive.) Adds a word into the holding tank for this ultralink. */
-    public function submitWord( $word, $caseSensitive ){ return $this->APICall( array( 'submitWord' => $word, 'caseSensitive' => $caseSensitive ), "Could not enter in submitted words ultralink: " . $this->description() . ", word: " . $word . ", caseSensitive: " . $caseSensitive ); }
+    /* GROUP(Holding Tank) word(A word string.) caseSensitive(Boolean. 1 indicates that this Word is case sensitive.) Adds a word into the holding tank for this Ultralink. */
+    public function submitWord( $word, $caseSensitive ){ return $this->APICall( array( 'submitWord' => $word, 'caseSensitive' => $caseSensitive ), "Could not enter in submitted words Ultralink: " . $this->description() . ", word: " . $word . ", caseSensitive: " . $caseSensitive ); }
 
-    /* GROUP(Holding Tank) pageURL(A URL that this ultralink needs a bias on.) feedback(A non-zero feedback number.) Adds a page feedback value for the specified page into the holding tank for this ultralink. */
+    /* GROUP(Holding Tank) pageURL(A URL that this Ultralink needs a bias on.) feedback(A non-zero feedback number.) Adds a page feedback value for the specified page into the holding tank for this Ultralink. */
     public function submitPageFeedback( $pageURL, $feedback ){ return $this->APICall( array( 'submitPageFeedback' => $pageURL, 'feedback' => $feedback ), "Could not enter in submitted page feedback " . $this->description() . " " . $pageURL . " " . $feedback ); }
 
     public function APICallSub( $sub, $fields, $error )
     {
-        global $cMaster;
-
-        if( $call = $cMaster->APICall('0.9.1/db/' . $this->db->ID . '/ul/' . $this->ID . $sub, $fields ) )
+        $call = Master::$cMaster->APICall('0.9.1/db/' . $this->db->ID . '/ul/' . $this->ID . $sub, $fields );
+        
+        if( $call !== "" )
         {
             if( $call === true ){ return $call; }
                             else{ return json_decode( $call, true ); }

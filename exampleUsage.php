@@ -3,16 +3,18 @@
 
 // Copyright © 2016 Ultralink Inc.
 
+namespace UL;
+
 // Including this file will subsequently include all the classes needed for operation and set things up in a default state.
 require_once 'Ultralink-API.php';
 
 $APIKey = "<Enter your API Key here>"; // You can get an API Key from your Profile pane in the Ultralink Dashboard.
 
-// There are a couple of global variables that are useful and occassionally come into play.
+// There are a couple of variables that are useful and occassionally come into play.
 echo "\n";
-echo "Current Master: \t"   . $cMaster->description() . "\n"; // The current Ultralink Master you are pointing to.
-echo "Current Database: \t" . $cDB->description()     . "\n"; // The current default Database within cMaster that you are working in.
-echo "Current User: \t\t"   . $cUser->description()   . "\n"; // The current User that will perform API calls by default.
+echo "Current Master: \t"   . Master::$cMaster->description() . "\n"; // The current Ultralink Master you are pointing to.
+echo "Current Database: \t" . Database::$cDB->description()   . "\n"; // The current default Database within cMaster that you are working in.
+echo "Current User: \t\t"   . User::$cUser->description()     . "\n"; // The current User that will perform API calls by default.
 
 // This is a global variable that indicates whether the process should exit or keep going if a failure occurs.
 // This is set to false only for the purposes of this example code.
@@ -76,11 +78,11 @@ $ul->sync();
 
 // Oh, oops. Looks like an anonymous User is not allowed to actually make changes to the Ultralinks on the Master.
 // To actually write changes back to the Master, we need to authenticate.
-$me = $cMaster->login($APIKey);
+$me = Master::$cMaster->login($APIKey);
 echo "Me: " . $me->description() . "\n";
 
 // Logging in to a Master will automatically set your User to the current User if the current User is anonymous.
-echo "Current User: " . $cUser->description() . "\n";
+echo "Current User: " . User::$cUser->description() . "\n";
 
 // Now that you have actually authenticated, you can actually use sync() to write changes to the database.
 // Check out documentation/Documentation.html and browse the each of the classes to get a good idea of what kinds of things you can do.

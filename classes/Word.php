@@ -2,6 +2,8 @@
 
 // Copyright © 2016 Ultralink Inc.
 
+namespace UL;
+
 class Word
 {
     public $ul;
@@ -13,14 +15,12 @@ class Word
 
     public $dirty = false;
 
-    /* GROUP(Class Functions) ul(Ultralink) Returns an array of words for the ultralink <b>ul</b>. */
+    /* GROUP(Class Functions) ul(Ultralink) Returns an array of words for the Ultralink <b>ul</b>. */
     public static function getWords( $ul )
     {
-        global $cMaster;
-
         $theWords = array();
 
-        if( $call = $cMaster->APICall('0.9.1/db/' . $ul->db->ID . '/ul/' . $ul->ID, 'words' ) )
+        if( $call = Master::$cMaster->APICall('0.9.1/db/' . $ul->db->ID . '/ul/' . $ul->ID, 'words' ) )
         {
             foreach( json_decode( $call, true ) as $word ){ array_push( $theWords, Word::wordFromObject( $ul, $word ) ); }
         }
@@ -32,8 +32,6 @@ class Word
     /* GROUP(Class Functions) theUL(Ultralink) theString(A word string.) theCaseSensitive(Boolean. Indicates whether the word is case-sensitive.) thePrimaryWord(Boolean. Indicates whether the word is primary.) theCommonalityThreshold(A number indicating the commonality threshold of this word.) Creates a word on <b>theUL</b> based on the passed in paramters. */
     public static function W( $theUL, $theString, $theCaseSensitive = null, $thePrimaryWord = null, $theCommonalityThreshold = null )
     {
-        global $cMaster;
-
         $w = new self();
 
         $w->ul         = $theUL;
@@ -47,7 +45,7 @@ class Word
         }
         else
         {
-            if( $call = $cMaster->APICall('0.9.1/db/' . $theUL->db->ID . '/ul/' . $theUL->ID, array('wordSpecific' => $theString) ) )
+            if( $call = Master::$cMaster->APICall('0.9.1/db/' . $theUL->db->ID . '/ul/' . $theUL->ID, array('wordSpecific' => $theString) ) )
             {
                 $details = json_decode( $call, true );
 
@@ -85,7 +83,7 @@ class Word
     /* GROUP(Information) Returns this word's case sensitivity value. */
     public function        caseSensitive(){ return $this->caseSensitive;        }
 
-    /* GROUP(Information) Returns this word's primary word value. */
+    /* GROUP(Information) Returns this word's Primary Word value. */
     public function          primaryWord(){ return $this->primaryWord;          }
 
     /* GROUP(Information) Returns this word's commonality threshold value. */
@@ -94,7 +92,7 @@ class Word
     /* GROUP(Information) v(Boolean. Indicates whether this word is case-sensitive.) Sets this word's case sensitivity value to <b>v</b>. */
     public function        setCaseSensitive( $v ){ if( $this->caseSensitive        != $v ){ $this->dirty = true; } $this->caseSensitive        = $v; }
 
-    /* GROUP(Information) v(Boolean. Indicates whether the word is primary.) Sets this word's primary word value to <b>v</b>. */
+    /* GROUP(Information) v(Boolean. Indicates whether the word is primary.) Sets this word's Primary Word value to <b>v</b>. */
     public function          setPrimaryWord( $v ){ if( $this->primaryWord          != $v ){ $this->dirty = true; } $this->primaryWord          = $v; }
 
     /* GROUP(Information) v(A number indicating the commonality threshold of this word.) Sets this word's commonality threshold value to <b>v</b>. */
@@ -122,11 +120,9 @@ class Word
     /* GROUP(Actions) Syncs the status of this word to disk in an efficient way. */
     public function sync()
     {
-        global $cMaster;
-
         if( $this->dirty )
         {
-            if( !$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'setWord' => $this->json() ) ) ){ commandResult( 500, "Could not set word " . $this->description() . " on to " . $this->ul->ID . " - " . $this->ul->db->name ); }
+            if( !Master::$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'setWord' => $this->json() ) ) ){ commandResult( 500, "Could not set word " . $this->description() . " on to " . $this->ul->ID . " - " . $this->ul->db->name ); }
             $this->dirty = false;
 
             return true;
@@ -138,9 +134,7 @@ class Word
     /* GROUP(Actions) Deletes this word. */
     public function nuke()
     {
-        global $cMaster;
-
-        if( !$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'removeWord' => $this->json() ) ) ){ commandResult( 500, "Could not remove word " . $this->description() . " from " . $this->ul->ID . " - " . $this->ul->db->name ); }
+        if( !Master::$cMaster->APICall('0.9.1/db/' . $this->ul->db->ID . '/ul/' . $this->ul->ID, array( 'removeWord' => $this->json() ) ) ){ commandResult( 500, "Could not remove word " . $this->description() . " from " . $this->ul->ID . " - " . $this->ul->db->name ); }
     }
 }
 

@@ -2,6 +2,8 @@
 
 // Copyright © 2016 Ultralink Inc.
 
+namespace UL;
+
 class Connection
 {
     private $ulA;
@@ -11,14 +13,12 @@ class Connection
 
     public $dirty = false;
 
-    /* GROUP(Class Functions) ul(Ultralink) Returns an array of connections for the ultralink <b>ul</b>. */
+    /* GROUP(Class Functions) ul(Ultralink) Returns an array of connections for the Ultralink <b>ul</b>. */
     public static function getConnections( $ul )
     {
-        global $cMaster;
-
         $theConnections = array();
 
-        if( $call = $cMaster->APICall('0.9.1/db/' . $ul->db->ID . '/ul/' . $ul->ID, 'connections' ) )
+        if( $call = Master::$cMaster->APICall('0.9.1/db/' . $ul->db->ID . '/ul/' . $ul->ID, 'connections' ) )
         {
             foreach( json_decode( $call, true ) as $connection ){ array_push( $theConnections, Connection::connectionFromObject( $ul, $connection ) ); }
         }
@@ -27,11 +27,9 @@ class Connection
         return $theConnections;
     }
 
-    /* GROUP(Class Functions) theULA(Ultralink or <ultralink identifier>) theULB(Ultralink or <ultralink identifier>) theConnection(A connection string.) db(<Database or <database identifier>>) Creates a connection <b>theConnection</b> between ultralinks <b>theULA</b> and <b>theULB</b>. */
+    /* GROUP(Class Functions) theULA(Ultralink or <ultralink identifier>) theULB(Ultralink or <ultralink identifier>) theConnection(A connection string.) db(<Database or <database identifier>>) Creates a connection <b>theConnection</b> between Ultralinks <b>theULA</b> and <b>theULB</b>. */
     public static function C( $theULA, $theULB, $theConnection = null, $db = null )
     {
-        global $cMaster;
-
         $c = new self();
 
         $aType = gettype($theULA);
@@ -58,7 +56,7 @@ class Connection
         }
         else
         {
-            if( $call = $cMaster->APICall('0.9.1/db/' . $theULA->db->ID . '/ul/' . $theULA->ID, array('connectionA' => $theULA->ID, 'connectionB' => $theULB->ID) ) )
+            if( $call = Master::$cMaster->APICall('0.9.1/db/' . $theULA->db->ID . '/ul/' . $theULA->ID, array('connectionA' => $theULA->ID, 'connectionB' => $theULB->ID) ) )
             {
                 $details = json_decode( $call, true );
 
@@ -92,10 +90,10 @@ class Connection
     /* GROUP(Representations) Returns a serializable object representation of the connection. */
     public function objectify(){ return array( 'aID' => $this->ulA()->ID, 'bID' => $this->ulB()->ID, 'connection' => $this->connection() ); }
 
-    /* GROUP(Connections) Returns the 'A' ultralink. */
+    /* GROUP(Connections) Returns the 'A' Ultralink. */
     public function ulA(){ return $this->ulA; }
 
-    /* GROUP(Connections) Returns the 'B' ultralink. */
+    /* GROUP(Connections) Returns the 'B' Ultralink. */
     public function ulB(){ return $this->ulB; }
 
     /* GROUP(Connections) Returns the connection string. */
@@ -128,11 +126,9 @@ class Connection
     /* GROUP(Actions) Syncs the status of this connection to disk in an efficient way. */
     public function sync()
     {
-        global $cMaster;
-
         if( $this->dirty )
         {
-            if( !$cMaster->APICall('0.9.1/db/' . $this->ulA->db->ID . '/ul/' . $this->ulA->ID, array( 'setConnection' => $this->json() ) ) ){ commandResult( 500, "Could not set connection " . $this->description() ); }
+            if( !Master::$cMaster->APICall('0.9.1/db/' . $this->ulA->db->ID . '/ul/' . $this->ulA->ID, array( 'setConnection' => $this->json() ) ) ){ commandResult( 500, "Could not set connection " . $this->description() ); }
             $this->dirty = false;
 
             return true;
@@ -144,9 +140,7 @@ class Connection
     /* GROUP(Actions) Deletes this connection. */
     public function nuke()
     {
-        global $cMaster;
-
-        if( !$cMaster->APICall('0.9.1/db/' . $this->ulA->db->ID . '/ul/' . $this->ulA->ID, array( 'removeConnection' => $this->json() ) ) ){ commandResult( 500, "Could remove connection " . $this->description() ); }
+        if( !Master::$cMaster->APICall('0.9.1/db/' . $this->ulA->db->ID . '/ul/' . $this->ulA->ID, array( 'removeConnection' => $this->json() ) ) ){ commandResult( 500, "Could remove connection " . $this->description() ); }
     }
 }
 
